@@ -1,21 +1,21 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Спаси зайца!</title>
+<title>Save the Rabbit!</title>
 <!--
-  ДЛЯ POKI: раскомментируйте строку ниже перед загрузкой игры в Poki for Developers.
-  Без неё игра работает сама по себе — рекламные вызовы просто пропускаются.
+  FOR POKI: uncomment the line below before uploading the game to Poki for Developers.
+  Without it the game runs standalone — ad calls are simply skipped.
 -->
 <!-- <script src="https://game-cdn.poki.com/scripts/v2/poki-sdk.js"></script> -->
 <style>
 /*
-  VOICE: уютная зимняя сказка, детская и добрая
-  IDEA: ночной заснеженный лес как сцена кукольного театра
-  PICTURE: вся игра — нарисованная кодом сцена (ели, луна, снег, персонажи)
-  COLOUR and TYPE: глубокий синий + снежно-белый + красный акцент (шапка, сердца); жирный округлый шрифт
-  LAYOUT: холст на весь экран, HUD сверху, карточки меню по центру
+  VOICE: a cozy winter fairy tale, kind and kid-friendly
+  IDEA: a snowy night forest as a puppet-theatre stage
+  PICTURE: the whole game is a code-drawn scene (firs, moon, snow, characters)
+  COLOUR and TYPE: deep blue + snow white + red accent (hat, hearts); bold rounded font
+  LAYOUT: full-screen canvas, HUD on top, menu cards centred
 */
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;min-height:480px;overflow:hidden;background:#16244a;touch-action:none;
@@ -87,8 +87,9 @@ h2{margin:0 0 14px;font-size:32px;line-height:1.1;color:#2563a8}
 .carrotline{display:flex;align-items:center;justify-content:center;gap:6px;font-weight:800;font-size:20px;color:#d9631e;margin:0 0 6px}
 .minor{display:flex;justify-content:center;flex-wrap:wrap;gap:8px}
 .shopwrap{position:relative;display:inline-block}
-.tapHand{position:absolute;right:-22px;bottom:-34px;width:42px;height:50px;pointer-events:none;display:none;animation:tap .9s ease-in-out infinite}
+.tapHand{position:absolute;right:-30px;bottom:-30px;width:42px;height:50px;pointer-events:none;display:none;animation:tap .9s ease-in-out infinite}
 .hinting .tapHand{display:block}
+.hinting{margin-bottom:30px;margin-right:24px}
 .hinting .langbtn{border-color:#ffb020;animation:glow 1.2s ease-in-out infinite}
 @keyframes tap{50%{transform:translate(-7px,-9px)}}
 @keyframes glow{50%{box-shadow:0 0 0 7px rgba(255,176,32,.4)}}
@@ -129,8 +130,8 @@ h2{margin:0 0 14px;font-size:32px;line-height:1.1;color:#2563a8}
 
 <div id="hud" class="menu-mode">
   <div class="pills">
-    <div class="pill"><small data-i18n="scoreSmall">очки</small> <span id="hudScore">0</span></div>
-    <div class="pill" id="hudWave">Волна 1</div>
+    <div class="pill"><small data-i18n="scoreSmall">score</small> <span id="hudScore">0</span></div>
+    <div class="pill" id="hudWave">Wave 1</div>
     <div class="pill" id="hudLives"></div>
     <div class="pill" id="hudSavedPill" data-i18n-title="savedRabbits"><svg class="ico" viewBox="0 0 24 24"><ellipse cx="8.5" cy="7" rx="2.6" ry="6" transform="rotate(-12 8.5 7)" fill="#8aa3c4"/><ellipse cx="15.5" cy="7" rx="2.6" ry="6" transform="rotate(12 15.5 7)" fill="#8aa3c4"/><ellipse cx="8.6" cy="7.4" rx="1.1" ry="4" transform="rotate(-12 8.6 7.4)" fill="#ffc2d1"/><ellipse cx="15.4" cy="7.4" rx="1.1" ry="4" transform="rotate(12 15.4 7.4)" fill="#ffc2d1"/><circle cx="12" cy="15.5" r="6.5" fill="#8aa3c4"/><circle cx="9.6" cy="14.6" r="1.1" fill="#1e3a5f"/><circle cx="14.4" cy="14.6" r="1.1" fill="#1e3a5f"/><circle cx="12" cy="17.2" r="1.1" fill="#ff8fa8"/></svg><span id="hudSaved">0</span></div>
     <div class="pill" id="hudCarrotPill" data-i18n-title="carrots"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5 10 9.6q2.6-2.2 4.6-.3 1.9 2-.3 4.6z" fill="#ff8a2a"/><path d="M7 15.5l2 1M9.5 12.2l2 1" stroke="#d9631e" stroke-width="1.2" stroke-linecap="round"/><path d="M13.8 9.6Q14.6 4 19 2.8q-1.4 4.3-5.2 6.8zM14.4 10.2q4.9-2.3 7.3.4-4.3 1.7-7.3-.4z" fill="#2fa35a"/></svg><span id="hudCarrots">0</span></div>
@@ -145,68 +146,68 @@ h2{margin:0 0 14px;font-size:32px;line-height:1.1;color:#2563a8}
 
 <div id="menu" class="overlay">
   <div class="card">
-    <h1 data-i18n="title">Спаси зайца!</h1>
-    <button class="btn" id="btnPlay" data-i18n="play">Играть</button>
-    <div><button class="langbtn shopbtn" data-open-shop><svg class="carrot" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5 10 9.6q2.6-2.2 4.6-.3 1.9 2-.3 4.6z" fill="#ff8a2a"/><path d="M7 15.5l2 1M9.5 12.2l2 1" stroke="#d9631e" stroke-width="1.2" stroke-linecap="round"/><path d="M13.8 9.6Q14.6 4 19 2.8q-1.4 4.3-5.2 6.8zM14.4 10.2q4.9-2.3 7.3.4-4.3 1.7-7.3-.4z" fill="#2fa35a"/></svg><span data-i18n="shop">Магазин</span> · <b class="carrotCount">0</b></button></div>
-    <div class="best"><span data-i18n="best">Рекорд</span>: <span id="menuBest">0</span></div>
+    <h1 data-i18n="title">Save the Rabbit!</h1>
+    <button class="btn" id="btnPlay" data-i18n="play">Play</button>
+    <div><button class="langbtn shopbtn" data-open-shop><svg class="carrot" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5 10 9.6q2.6-2.2 4.6-.3 1.9 2-.3 4.6z" fill="#ff8a2a"/><path d="M7 15.5l2 1M9.5 12.2l2 1" stroke="#d9631e" stroke-width="1.2" stroke-linecap="round"/><path d="M13.8 9.6Q14.6 4 19 2.8q-1.4 4.3-5.2 6.8zM14.4 10.2q4.9-2.3 7.3.4-4.3 1.7-7.3-.4z" fill="#2fa35a"/></svg><span data-i18n="shop">Shop</span> · <b class="carrotCount">0</b></button></div>
+    <div class="best"><span data-i18n="best">Best</span>: <span id="menuBest">0</span></div>
     <button class="langbtn" data-open-lang><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="#2563a8" stroke-width="2"/><path d="M3 12h18M12 3c2.8 3 2.8 15 0 18M12 3c-2.8 3-2.8 15 0 18" fill="none" stroke="#2563a8" stroke-width="2"/></svg><span class="langname"></span></button>
   </div>
 </div>
 
 <div id="pause" class="overlay hidden">
   <div class="card">
-    <h2 data-i18n="pause">Пауза</h2>
-    <button class="btn" id="btnResume" data-i18n="resume">Продолжить</button>
-    <div class="minor"><button class="langbtn" data-open-shop><svg class="carrot" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5 10 9.6q2.6-2.2 4.6-.3 1.9 2-.3 4.6z" fill="#ff8a2a"/><path d="M7 15.5l2 1M9.5 12.2l2 1" stroke="#d9631e" stroke-width="1.2" stroke-linecap="round"/><path d="M13.8 9.6Q14.6 4 19 2.8q-1.4 4.3-5.2 6.8zM14.4 10.2q4.9-2.3 7.3.4-4.3 1.7-7.3-.4z" fill="#2fa35a"/></svg><span data-i18n="shop">Магазин</span></button>
+    <h2 data-i18n="pause">Paused</h2>
+    <button class="btn" id="btnResume" data-i18n="resume">Resume</button>
+    <div class="minor"><button class="langbtn" data-open-shop><svg class="carrot" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5 10 9.6q2.6-2.2 4.6-.3 1.9 2-.3 4.6z" fill="#ff8a2a"/><path d="M7 15.5l2 1M9.5 12.2l2 1" stroke="#d9631e" stroke-width="1.2" stroke-linecap="round"/><path d="M13.8 9.6Q14.6 4 19 2.8q-1.4 4.3-5.2 6.8zM14.4 10.2q4.9-2.3 7.3.4-4.3 1.7-7.3-.4z" fill="#2fa35a"/></svg><span data-i18n="shop">Shop</span></button>
     <button class="langbtn" data-open-lang><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="#2563a8" stroke-width="2"/><path d="M3 12h18M12 3c2.8 3 2.8 15 0 18M12 3c-2.8 3-2.8 15 0 18" fill="none" stroke="#2563a8" stroke-width="2"/></svg><span class="langname"></span></button></div>
   </div>
 </div>
 
 <div id="between" class="overlay soft hidden">
   <div class="card">
-    <h2 id="brTitle">Волна пройдена!</h2>
+    <h2 id="brTitle">Wave cleared!</h2>
     <div class="rows" id="brSub"></div>
-    <button class="btn green same" id="btnNext" data-i18n="next">Дальше</button>
-    <button class="btn ad same" id="btnLife"><svg class="adico" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3.5" fill="#ffffff"/><path d="M10 9l5 3-5 3z" fill="#1f5fa3"/></svg><span data-i18n="lifeAd">+1 ♥ за рекламу</span></button>
-    <p class="shophint hidden" id="brShopHint" data-i18n="shopHint"></p>
-    <div class="minor"><span class="shopwrap"><button class="langbtn" id="btnBrShop" data-open-shop><svg class="carrot" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5 10 9.6q2.6-2.2 4.6-.3 1.9 2-.3 4.6z" fill="#ff8a2a"/><path d="M7 15.5l2 1M9.5 12.2l2 1" stroke="#d9631e" stroke-width="1.2" stroke-linecap="round"/><path d="M13.8 9.6Q14.6 4 19 2.8q-1.4 4.3-5.2 6.8zM14.4 10.2q4.9-2.3 7.3.4-4.3 1.7-7.3-.4z" fill="#2fa35a"/></svg><span data-i18n="shop">Магазин</span> · <b class="carrotCount">0</b></button><svg class="tapHand" id="brHand" viewBox="0 0 44 52" aria-hidden="true"><defs><g id="handShape"><rect x="16" y="2" width="11" height="30" rx="5.5"/><rect x="8" y="23" width="28" height="26" rx="9"/><ellipse cx="9" cy="33" rx="5" ry="8" transform="rotate(-25 9 33)"/></g></defs><g transform="rotate(-30 22 26)"><use href="#handShape" fill="#1e3a5f" stroke="#1e3a5f" stroke-width="5" stroke-linejoin="round"/><use href="#handShape" fill="#ffffff"/></g></svg></span></div>
+    <button class="btn green same" id="btnNext" data-i18n="next">Next</button>
+    <button class="btn ad same" id="btnLife"><svg class="adico" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3.5" fill="#ffffff"/><path d="M10 9l5 3-5 3z" fill="#1f5fa3"/></svg><span data-i18n="lifeAd">+1 ♥ (watch an ad)</span></button>
+    <p class="shophint hidden" id="brShopHint" data-i18n="shopHint">You have enough carrots for something new — visit the shop!</p>
+    <div class="minor"><span class="shopwrap"><button class="langbtn" id="btnBrShop" data-open-shop><svg class="carrot" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5 10 9.6q2.6-2.2 4.6-.3 1.9 2-.3 4.6z" fill="#ff8a2a"/><path d="M7 15.5l2 1M9.5 12.2l2 1" stroke="#d9631e" stroke-width="1.2" stroke-linecap="round"/><path d="M13.8 9.6Q14.6 4 19 2.8q-1.4 4.3-5.2 6.8zM14.4 10.2q4.9-2.3 7.3.4-4.3 1.7-7.3-.4z" fill="#2fa35a"/></svg><span data-i18n="shop">Shop</span> · <b class="carrotCount">0</b></button><svg class="tapHand" id="brHand" viewBox="0 0 44 52" aria-hidden="true"><defs><g id="handShape"><rect x="7" y="2" width="11" height="32" rx="5.5"/><rect x="6" y="25" width="33" height="25" rx="9"/><circle cx="22" cy="26" r="4.5"/><circle cx="29" cy="27" r="4.5"/><circle cx="35.5" cy="30" r="4"/><ellipse cx="6" cy="37" rx="5" ry="8.5" transform="rotate(-30 6 37)"/></g></defs><g transform="rotate(-26 22 26)"><use href="#handShape" fill="#1e3a5f" stroke="#1e3a5f" stroke-width="5" stroke-linejoin="round"/><use href="#handShape" fill="#ffffff"/><path d="M18.5 27v8M25.5 28v8M32.3 30v7" stroke="rgba(30,58,95,.4)" stroke-width="1.8" stroke-linecap="round"/></g></svg></span></div>
   </div>
 </div>
 
 <div id="langPick" class="overlay hidden">
   <div class="card">
-    <h2 data-i18n="language">Язык</h2>
+    <h2 data-i18n="language">Language</h2>
     <div class="langgrid" id="langGrid"></div>
   </div>
 </div>
 
 <div id="shop" class="overlay hidden">
   <div class="card shopcard">
-    <h2 data-i18n="shop">Магазин</h2>
+    <h2 data-i18n="shop">Shop</h2>
     <div class="balance"><svg class="carrot" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5 10 9.6q2.6-2.2 4.6-.3 1.9 2-.3 4.6z" fill="#ff8a2a"/><path d="M7 15.5l2 1M9.5 12.2l2 1" stroke="#d9631e" stroke-width="1.2" stroke-linecap="round"/><path d="M13.8 9.6Q14.6 4 19 2.8q-1.4 4.3-5.2 6.8zM14.4 10.2q4.9-2.3 7.3.4-4.3 1.7-7.3-.4z" fill="#2fa35a"/></svg><b class="carrotCount">0</b></div>
-    <h3 data-i18n="hats">Шапки</h3>
+    <h3 data-i18n="hats">Hats</h3>
     <div class="items" id="shopHats"></div>
-    <h3 data-i18n="shots">Снежинки</h3>
+    <h3 data-i18n="shots">Snowflakes</h3>
     <div class="items" id="shopShots"></div>
-    <button class="btn" id="btnShopBack" data-i18n="back">Назад</button>
+    <button class="btn" id="btnShopBack" data-i18n="back">Back</button>
   </div>
 </div>
 
 <div id="over" class="overlay hidden">
   <div class="card">
-    <h2 data-i18n="gameOver">Игра окончена</h2>
+    <h2 data-i18n="gameOver">Game over</h2>
     <div class="stats">
-      <div><span data-i18n="score">Очки</span><b id="ovScore">0</b></div>
-      <div><span data-i18n="saved">Спасено</span><b id="ovSaved">0</b></div>
-      <div><span data-i18n="best">Рекорд</span><b id="ovBest">0</b></div>
+      <div><span data-i18n="score">Score</span><b id="ovScore">0</b></div>
+      <div><span data-i18n="saved">Saved</span><b id="ovSaved">0</b></div>
+      <div><span data-i18n="best">Best</span><b id="ovBest">0</b></div>
     </div>
-    <div id="ovNew" class="newrec hidden" data-i18n="newRecord">Новый рекорд!</div>
+    <div id="ovNew" class="newrec hidden" data-i18n="newRecord">New record!</div>
     <div class="carrotline"><svg class="carrot" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5 10 9.6q2.6-2.2 4.6-.3 1.9 2-.3 4.6z" fill="#ff8a2a"/><path d="M7 15.5l2 1M9.5 12.2l2 1" stroke="#d9631e" stroke-width="1.2" stroke-linecap="round"/><path d="M13.8 9.6Q14.6 4 19 2.8q-1.4 4.3-5.2 6.8zM14.4 10.2q4.9-2.3 7.3.4-4.3 1.7-7.3-.4z" fill="#2fa35a"/></svg><span>+<b id="ovCarrots">0</b></span></div>
-    <button class="btn green same" id="btnRestart" data-i18n="again">Ещё раз</button>
-    <button class="btn ad same" id="btnContinue"><svg class="adico" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3.5" fill="#ffffff"/><path d="M10 9l5 3-5 3z" fill="#1f5fa3"/></svg><span data-i18n="continueAd">Продолжить (реклама)</span></button>
+    <button class="btn green same" id="btnRestart" data-i18n="again">Play again</button>
+    <button class="btn ad same" id="btnContinue"><svg class="adico" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3.5" fill="#ffffff"/><path d="M10 9l5 3-5 3z" fill="#1f5fa3"/></svg><span data-i18n="continueAd">Continue (watch an ad)</span></button>
     <div class="minor">
-      <button class="langbtn" id="btnDouble"><svg class="adico" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3.5" fill="#ffffff"/><path d="M10 9l5 3-5 3z" fill="#1f5fa3"/></svg><svg class="carrot" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5 10 9.6q2.6-2.2 4.6-.3 1.9 2-.3 4.6z" fill="#ff8a2a"/><path d="M7 15.5l2 1M9.5 12.2l2 1" stroke="#d9631e" stroke-width="1.2" stroke-linecap="round"/><path d="M13.8 9.6Q14.6 4 19 2.8q-1.4 4.3-5.2 6.8zM14.4 10.2q4.9-2.3 7.3.4-4.3 1.7-7.3-.4z" fill="#2fa35a"/></svg><span data-i18n="doubleAd">Удвоить морковки (реклама)</span></button>
-      <button class="langbtn" data-open-shop><svg class="carrot" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5 10 9.6q2.6-2.2 4.6-.3 1.9 2-.3 4.6z" fill="#ff8a2a"/><path d="M7 15.5l2 1M9.5 12.2l2 1" stroke="#d9631e" stroke-width="1.2" stroke-linecap="round"/><path d="M13.8 9.6Q14.6 4 19 2.8q-1.4 4.3-5.2 6.8zM14.4 10.2q4.9-2.3 7.3.4-4.3 1.7-7.3-.4z" fill="#2fa35a"/></svg><span data-i18n="shop">Магазин</span></button>
+      <button class="langbtn" id="btnDouble"><svg class="adico" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3.5" fill="#ffffff"/><path d="M10 9l5 3-5 3z" fill="#1f5fa3"/></svg><svg class="carrot" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5 10 9.6q2.6-2.2 4.6-.3 1.9 2-.3 4.6z" fill="#ff8a2a"/><path d="M7 15.5l2 1M9.5 12.2l2 1" stroke="#d9631e" stroke-width="1.2" stroke-linecap="round"/><path d="M13.8 9.6Q14.6 4 19 2.8q-1.4 4.3-5.2 6.8zM14.4 10.2q4.9-2.3 7.3.4-4.3 1.7-7.3-.4z" fill="#2fa35a"/></svg><span data-i18n="doubleAd">Double carrots (watch an ad)</span></button>
+      <button class="langbtn" data-open-shop><svg class="carrot" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5 10 9.6q2.6-2.2 4.6-.3 1.9 2-.3 4.6z" fill="#ff8a2a"/><path d="M7 15.5l2 1M9.5 12.2l2 1" stroke="#d9631e" stroke-width="1.2" stroke-linecap="round"/><path d="M13.8 9.6Q14.6 4 19 2.8q-1.4 4.3-5.2 6.8zM14.4 10.2q4.9-2.3 7.3.4-4.3 1.7-7.3-.4z" fill="#2fa35a"/></svg><span data-i18n="shop">Shop</span></button>
     </div>
   </div>
 </div>
@@ -215,10 +216,10 @@ h2{margin:0 0 14px;font-size:32px;line-height:1.1;color:#2563a8}
 {
 'use strict';
 
-/* ================= Poki SDK (безопасная обёртка) ================= */
-// В сборке для Poki есть тег SDK. Без него (локальный тест) награды выдаются сразу.
+/* ================= Poki SDK (safe wrapper) ================= */
+// The Poki build includes the SDK tag. Without it (local testing) rewards are granted immediately.
 const DEV = !document.querySelector('script[src*="poki-sdk"]');
-let hadInput = false; // Poki: gameplayStart — только после первого действия игрока, не при загрузке
+let hadInput = false; // Poki: gameplayStart only after the player's first input, not on load
 const Poki = (() => {
   const sdk = () => window.PokiSDK;
   let ready = false, playing = false;
@@ -226,7 +227,7 @@ const Poki = (() => {
     get on() { return ready && !!sdk(); },
     init() {
       if (!sdk()) return Promise.resolve();
-      return sdk().init().then(() => { ready = true; }).catch(() => { ready = true; }); // адблок: игра всё равно работает
+      return sdk().init().then(() => { ready = true; }).catch(() => { ready = true; }); // ad blocker: the game still works
     },
     loadingFinished() { if (this.on) sdk().gameLoadingFinished(); },
     start() { if (playing || !hadInput) return; playing = true; if (this.on) sdk().gameplayStart(); },
@@ -240,7 +241,7 @@ const Poki = (() => {
     },
     rewardedBreak() {
       this.stop();
-      if (!this.on) return Promise.resolve(DEV); // без SDK: в тесте награда сразу, в сборке для Poki — нет (блокировщик рекламы)
+      if (!this.on) return Promise.resolve(DEV); // no SDK: in testing reward immediately, in the Poki build no reward (ad blocker)
       return sdk().rewardedBreak({ size: 'small', onStart: () => Sound.adMute(true) })
         .then(r => { Sound.adMute(false); return !!r; })
         .catch(() => { Sound.adMute(false); return false; });
@@ -248,13 +249,13 @@ const Poki = (() => {
   };
 })();
 
-/* ================= Хранилище ================= */
+/* ================= Storage ================= */
 const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
 };
 
-/* ================= Звук и музыка (WebAudio, без файлов) ================= */
+/* ================= Sound and music (WebAudio, no files) ================= */
 const Sound = (() => {
   let ac = null, master = null, sfx = null, musicIn = null, musicGain = null, noiseBuf = null;
   let muted = store.get('str_muted', '0') === '1', musicOn = store.get('str_music', '1') === '1', adMuted = false;
@@ -268,7 +269,7 @@ const Sound = (() => {
   };
   const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
 
-  // --- Музыка: зимняя мелодия «музыкальная шкатулка», ля минор, 8 тактов ---
+  // --- Music: winter "music box" melody, A minor, 8 bars ---
   const MELODY = [
     76,0,72,0,69,72,76,0,  77,0,76,0,72,0,69,0,  72,0,74,76,79,0,76,0,  74,0,71,0,67,0,0,0,
     76,0,72,0,69,72,76,81, 79,0,77,0,76,0,72,0,  74,0,77,0,76,74,72,0,  71,0,68,0,64,0,0,0
@@ -350,14 +351,14 @@ const Sound = (() => {
     ensure,
     get muted() { return muted; },
     get musicOn() { return musicOn; },
-    // кнопка «звуки» — только эффекты (броски, попадания)
+    // "sounds" button — effects only (throws, hits)
     toggle() { muted = !muted; store.set('str_muted', muted ? '1' : '0'); apply(); return muted; },
-    // кнопка «музыка» — только фоновая мелодия
+    // "music" button — background melody only
     toggleMusic() { musicOn = !musicOn; store.set('str_music', musicOn ? '1' : '0'); apply(); return musicOn; },
     adMute(v) { adMuted = v; apply(); },
-    // громкость музыки: 1 — игра, меньше — пауза / конец игры
+    // music volume: 1 — gameplay, lower — pause / game over
     duck(v) { level = v; apply(); },
-    // музыка ускоряется и становится насыщеннее с каждой волной
+    // music gets faster and richer with every wave
     setWave(n) { tempo = 96 + Math.min(n - 1, 6) * 3; intensity = n >= 5 ? 2 : n >= 3 ? 1 : 0; },
     suspend(hidden) { if (!ac) return; if (hidden) ac.suspend().catch(() => {}); else if (!adMuted) ac.resume().catch(() => {}); },
     throw() { tone(1500, 600, 0.11, 'triangle', 0.07); },
@@ -370,14 +371,14 @@ const Sound = (() => {
   };
 })();
 
-/* ================= Языки ================= */
-// Все тексты игры в одном месте. {n} подставляется числом.
+/* ================= Languages ================= */
+// All game texts in one place. {n} is replaced with a number.
 const LANGS = [
   ['en', 'English'], ['ru', 'Русский'], ['pt', 'Português'], ['tr', 'Türkçe'],
   ['es', 'Español'], ['fr', 'Français'], ['de', 'Deutsch'], ['it', 'Italiano'],
   ['zh', '简体中文'], ['ja', '日本語'], ['ko', '한국어'], ['hi', 'हिन्दी']
 ];
-const NB = ' '; // неразрывный пробел (во французском перед ! и :)
+const NB = ' '; // non-breaking space (French uses it before ! and :)
 const I18N = {
   en: {
     title: 'Save the Rabbit!',
@@ -640,7 +641,7 @@ const T = (key, n) => {
   const s = (I18N[lang] && I18N[lang][key]) || I18N.en[key] || key;
   return n === undefined ? s : s.replace('{n}', n);
 };
-// код языка браузера/Poki → один из наших (иначе английский)
+// browser/Poki language code → one of ours (otherwise English)
 function pickLang(code) {
   const c = String(code || '').toLowerCase().slice(0, 2);
   return I18N[c] ? c : null;
@@ -657,7 +658,7 @@ function applyLang(code) {
   document.querySelectorAll('.langname').forEach(el => { el.textContent = name; });
 }
 
-/* ================= Утилиты ================= */
+/* ================= Utilities ================= */
 const rand = (a, b) => a + Math.random() * (b - a);
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 const dist = (ax, ay, bx, by) => Math.hypot(ax - bx, ay - by);
@@ -674,14 +675,14 @@ function heart(c, x, y, s) {
   c.fill();
 }
 const $ = id => document.getElementById(id);
-// на низких экранах (например, 640×360) верхняя панель прячется, пока открыто окно, — иначе она закрывает заголовок
+// on short screens (e.g. 640×360) the top bar hides while a dialog is open — otherwise it covers the title
 const syncModal = () => document.body.classList.toggle('modal', [...document.querySelectorAll('.overlay')].some(o => !o.classList.contains('hidden')));
 const show = el => { el.classList.remove('hidden'); syncModal(); };
 const hide = el => { el.classList.add('hidden'); syncModal(); };
 
-/* ================= Состояние ================= */
+/* ================= State ================= */
 const cvs = $('game');
-let ctx = cvs.getContext('2d'); // let — для превью в магазине рисуем теми же функциями на другом холсте
+let ctx = cvs.getContext('2d'); // let — shop previews reuse the same drawing functions on another canvas
 const hudEl = $('hud'), menuEl = $('menu'), pauseEl = $('pause'), overEl = $('over');
 let W = 0, H = 0, S = 1, DPR = 1, groundTop = 0, groundBot = 0, playerX = 0, playerY = 0, bg = null;
 
@@ -699,12 +700,12 @@ const game = {
 
 const depth = y => 0.75 + 0.4 * (y - groundTop) / (groundBot - groundTop);
 
-/* ================= Размер экрана ================= */
+/* ================= Screen size ================= */
 function resize() {
   const vv = window.visualViewport, de = document.documentElement;
   const nw = Math.round(window.innerWidth || de.clientWidth || (vv && vv.width) || 0);
   const nh = Math.round(window.innerHeight || de.clientHeight || (vv && vv.height) || 0);
-  // во встроенных просмотрщиках окно может сначала иметь нулевой размер — ждём настоящего
+  // embedded viewers may start with a zero-size window — wait for a real size
   if (nw < 50 || nh < 50) return;
   if (nw === W && nh === H && bg) return;
   const oW = W, oH = H, oS = S;
@@ -727,7 +728,7 @@ function resize() {
   } else { pointer.x = W / 2; pointer.y = H * 0.5; }
 }
 
-/* ================= Фон (рисуется один раз) ================= */
+/* ================= Background (drawn once) ================= */
 function pine(c, x, y, h, col, snowCol) {
   const w = h * 0.44;
   c.fillStyle = '#3b2a22'; c.fillRect(x - w * 0.06, y - h * 0.13, w * 0.12, h * 0.13);
@@ -794,7 +795,7 @@ function buildBackground() {
   c.fillStyle = g; c.fillRect(0, 0, W, H);
 }
 
-/* ================= Падающий снег ================= */
+/* ================= Falling snow ================= */
 function initSnow() {
   const n = Math.round(clamp(W * H / 9000, 40, 170));
   snow.length = 0;
@@ -813,7 +814,7 @@ function drawSnow() {
   ctx.fill();
 }
 
-/* ================= Персонажи ================= */
+/* ================= Characters ================= */
 function ear(c, x, y, a) {
   c.save(); c.translate(x, y); c.rotate(a);
   c.fillStyle = '#f6f9fd'; c.beginPath(); c.ellipse(0, -12, 5.5, 15, 0, 0, TAU); c.fill(); c.stroke();
@@ -910,7 +911,7 @@ function drawWolf(w) {
   }
 }
 function drawFox(w) {
-  // лиса: рыжая, хвост пушистый; у воровки чёрная «маска»
+  // fox: orange with a bushy tail; the thief wears a black "mask"
   const c = ctx, sc = depth(w.y) * S * 0.85, t = w.t;
   const frozen = w.stun > 0 && w.state !== 'carry', running = !frozen && w.state !== 'emerge';
   c.save(); c.translate(w.x, w.y);
@@ -953,7 +954,7 @@ function drawFox(w) {
 function drawStone(st) {
   const c = ctx, sx = st.fx * W, sy = st.fy * H, d = depth(sy) * S, rw = 36 * d, rh = 28 * d;
   c.fillStyle = 'rgba(40,60,100,0.25)'; ell(c, sx, sy, rw * 1.15, rh * 0.28);
-  // кончик хвоста иногда выглядывает — подсказка, что за камнем лиса
+  // a tail tip peeks out now and then — a hint that a fox is hiding behind the rock
   if (st.fox && (st.peek % 3.4) < 0.8) {
     c.save(); c.translate(sx + rw * 0.8, sy - rh * 0.5); c.rotate(-0.7 + Math.sin(st.peek * 14) * 0.25);
     c.fillStyle = '#e8742a'; ell(c, 10 * d, 0, 13 * d, 6.5 * d); c.fillStyle = '#fff6ec'; ell(c, 21 * d, 0, 5.5 * d, 5 * d);
@@ -987,39 +988,39 @@ function drawFlake(x, y, r, rot, alpha, edge, main, glow) {
   c.restore();
 }
 function drawPlayer() {
-  // мальчик нарисован со спины: он смотрит в лес, туда, куда бросает снежинки
+  // the boy is drawn from behind: he faces the forest, where he throws snowflakes
   const c = ctx, sc = S * 1.15, a = player.aim;
-  const look = Math.cos(a) * 3; // голова чуть поворачивается за прицелом
+  const look = Math.cos(a) * 3; // head turns slightly towards the aim
   c.save(); c.translate(playerX, playerY);
   c.fillStyle = 'rgba(40,60,100,0.22)'; ell(c, 0, 0, 30 * sc, 7 * sc);
   c.scale(sc, sc);
-  // ноги и ботинки (видны пятки)
+  // legs and boots (heels visible)
   c.fillStyle = '#34495e'; c.fillRect(-13, -28, 11, 24); c.fillRect(2, -28, 11, 24);
   c.fillStyle = '#4a2f22'; ell(c, -7.5, -4, 8, 4.5); ell(c, 7.5, -4, 8, 4.5);
   c.lineCap = 'round';
-  // свободная рука опущена
+  // free arm hangs down
   const sd = player.side;
   c.strokeStyle = '#2669b0'; c.lineWidth = 9; c.beginPath(); c.moveTo(-14 * sd, -54); c.lineTo(-22 * sd, -34); c.stroke();
   c.fillStyle = '#e23b4e'; circ(c, -23 * sd, -32, 5.5);
-  // куртка со спины: шов посередине, без пуговиц
+  // jacket from behind: centre seam, no buttons
   c.fillStyle = '#2f7fd1'; c.beginPath(); c.moveTo(-20, -24); c.quadraticCurveTo(-23, -62, 0, -64); c.quadraticCurveTo(23, -62, 20, -24); c.closePath(); c.fill();
   c.fillStyle = 'rgba(20,60,120,0.25)'; c.fillRect(-1, -60, 2, 31);
   c.fillStyle = '#e9f1fb'; c.fillRect(-20, -29, 40, 6);
-  // капюшон, сложенный на спине
+  // hood folded on the back
   c.fillStyle = '#2a72bf'; c.beginPath(); c.moveTo(-12, -62); c.quadraticCurveTo(0, -46, 12, -62); c.closePath(); c.fill();
-  // шарф: узел сзади и два хвостика
+  // scarf: knot at the back and two tails
   c.fillStyle = '#e23b4e'; c.fillRect(-13, -66, 26, 7);
   c.save(); c.translate(-3, -61); c.rotate(0.12 + Math.sin(game.time * 3) * 0.05);
   c.fillRect(-3.5, 0, 7, 17); c.fillStyle = '#ffffff'; c.fillRect(-3.5, 13, 7, 2); c.restore();
   c.fillStyle = '#e23b4e';
   c.save(); c.translate(2, -61); c.rotate(-0.08 + Math.sin(game.time * 3 + 1) * 0.05);
   c.fillRect(-3.5, 0, 7, 13); c.fillStyle = '#ffffff'; c.fillRect(-3.5, 9, 7, 2); c.restore();
-  // голова сзади: уши и волосы, лица не видно
+  // head from behind: ears and hair, no face
   c.fillStyle = '#ffcfae'; ell(c, -13.5 + look, -76, 3.2, 4.5); ell(c, 13.5 + look, -76, 3.2, 4.5);
   c.fillStyle = '#7a4a2e'; circ(c, look, -77, 14);
-  // шапка со спины
+  // hat from behind
   drawHat(c, skins.hat, look);
-  // рука со стороны цели бросает снежинку
+  // the arm on the target's side throws the snowflake
   const len = player.throwT > 0 ? 30 : 24, sx = 14 * sd, sy = -54, hx = sx + Math.cos(a) * len, hy = sy + Math.sin(a) * len;
   c.strokeStyle = '#2f7fd1'; c.lineWidth = 9; c.beginPath(); c.moveTo(sx, sy); c.lineTo(hx, hy); c.stroke();
   c.fillStyle = '#e23b4e'; circ(c, hx, hy, 5.5);
@@ -1040,7 +1041,7 @@ function drawPower(p) {
   c.restore();
 }
 
-/* ================= Текст на холсте ================= */
+/* ================= Canvas text ================= */
 function fitSize(text, max, maxW) { ctx.font = `900 ${max}px ${FONT}`; const w = ctx.measureText(text).width; return w > maxW ? max * maxW / w : max; }
 function outlined(text, x, y, size, fill, stroke) {
   ctx.font = `900 ${size}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
@@ -1048,7 +1049,7 @@ function outlined(text, x, y, size, fill, stroke) {
   ctx.fillStyle = fill || '#ffffff'; ctx.fillText(text, x, y);
 }
 
-/* ================= Эффекты ================= */
+/* ================= Effects ================= */
 function burst(x, y, color, n) {
   for (let i = 0; i < n; i++) {
     const a = Math.random() * TAU, v = rand(60, 220) * S;
@@ -1056,12 +1057,12 @@ function burst(x, y, color, n) {
   }
 }
 function popup(x, y, text, color, size) {
-  ctx.font = `900 ${size}px ${FONT}`; const half = ctx.measureText(text).width / 2 + 8; // не вылезать за край экрана
+  ctx.font = `900 ${size}px ${FONT}`; const half = ctx.measureText(text).width / 2 + 8; // keep inside the screen edges
   popups.push({ x: clamp(x, half, Math.max(half, W - half)), y, text, color, size, t: 0, life: 1.1 });
 }
 function addScore(n) { game.score += n; updateHud(); }
 
-/* ================= Волны ================= */
+/* ================= Waves ================= */
 function nextWave() {
   game.wave++;
   const n = game.wave;
@@ -1089,7 +1090,7 @@ function spawnPair() {
   const rx = side < 0 ? -30 * S : W + 30 * S;
   const r = { kind: 'r', x: rx, y, tx: 0, ty: 0, speed: 115 * S * rand(0.95, 1.05) * Math.min(game.speedMul, 1.4), state: 'flee', t: Math.random() * 10, dir: -side, retarget: 0, side: 1, wolf: null };
   const w = { kind: 'w', type: 'wolf', x: rx + side * rand(230, 300) * S, y: clamp(y + rand(-30, 30) * S, groundTop + 18 * S, groundBot), speed: 140 * S * game.speedMul, hp: game.wolfHp, maxHp: game.wolfHp, stun: 0, kb: 0, flash: 0, state: 'chase', t: 0, dir: -side, target: r };
-  // хитрая лиса — с 4-й волны: гарантированно одна за волну, дальше по шансу
+  // sly fox — from wave 4: one guaranteed per wave, then by chance
   if (game.wave >= 4 && ((game.foxThisWave === 0 && game.spawned >= 1) || Math.random() < Math.min(0.2 + (game.wave - 4) * 0.05, 0.4))) {
     Object.assign(w, { type: 'fox', hp: 1, maxHp: 1, speed: w.speed * 1.05, dodge: 1, dodgeCd: 0, jumpT: 0 });
     r.value = 150; game.foxThisWave++;
@@ -1104,7 +1105,7 @@ function spawnPower() {
   powerups.push({ type, x, bx: x, y: -30 * S, ty: rand(groundTop - 130 * S, groundTop - 40 * S), t: 0, life: 10, bob: 0 });
 }
 
-/* ================= Логика ================= */
+/* ================= Logic ================= */
 function moveToward(e, tx, ty, step) {
   const dx = tx - e.x, dy = ty - e.y, d = Math.hypot(dx, dy);
   if (d < 1e-3) return;
@@ -1160,7 +1161,7 @@ function hitWolf(w, f) {
     game.wolfTut = null; game.banner = { text: T('great'), sub: w.hp <= 0 ? T('rabbitSaved') : '', t: 0, life: 1.8 };
   }
 }
-/* ---- Лисы ---- */
+/* ---- Foxes ---- */
 const FOX_JUMP = 0.45;
 const foxHop = w => w.jumpT > 0 ? -Math.sin((1 - w.jumpT / FOX_JUMP) * Math.PI) * 40 * S : 0;
 function foxDodge(w) {
@@ -1169,7 +1170,7 @@ function foxDodge(w) {
   w.jy1 = clamp(w.y + dir * rand(60, 90) * S, groundTop + 18 * S, groundBot);
   popup(w.x, w.y - 85 * S, T('dodged'), '#ffb37a', 22 * S); Sound.throw();
 }
-// камни с 9-й волны: за некоторыми прячется лиса-воровка
+// rocks from wave 9: a thief fox hides behind some of them
 function setupStones() {
   if (!stones.length) [[0.18, 0.79], [0.34, 0.835], [0.66, 0.835], [0.82, 0.79]].forEach(([fx, fy]) => stones.push({ kind: 's', fx, fy, y: 0, fox: false, peek: Math.random() * 3 }));
   let n = 0;
@@ -1189,7 +1190,7 @@ function takePower(p) {
   else { game.triple = 8; popup(p.x, p.y, T('triplePop'), '#9fd4ff', 26 * S); }
   Sound.power(); updateHud();
 }
-/* ---- Обучение при первом появлении бонуса ---- */
+/* ---- Tutorial on the first appearance of a bonus ---- */
 function updateTutorial(dt) {
   const p = game.tutorial;
   p.t += dt; p.bob = Math.sin(p.t * 3) * 5 * S; game.tutT += dt;
@@ -1235,13 +1236,20 @@ function rrPath(c, x, y, w, h, r) {
   c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
 }
 function drawHand(x, y, s) {
+  // pointing gesture: index finger extended (on the thumb side), the other three curled
   const c = ctx;
-  c.save(); c.translate(x, y); c.scale(s, s); c.rotate(-0.5);
-  c.beginPath(); rrPath(c, -6, -36, 12, 38, 6); rrPath(c, -15, -8, 31, 32, 10); c.ellipse(-15, 6, 5, 9, -0.5, 0, TAU);
+  c.save(); c.translate(x, y); c.scale(s, s); c.rotate(-0.45);
+  c.beginPath();
+  rrPath(c, -15, -38, 11, 40, 5.5);            // index finger
+  rrPath(c, -16, -9, 33, 33, 10);              // palm
+  c.moveTo(4.5, -6); c.arc(0, -6, 4.5, 0, TAU);   // curled fingers (knuckles)
+  c.moveTo(11.5, -5); c.arc(7, -5, 4.5, 0, TAU);
+  c.moveTo(17.5, -2); c.arc(13.5, -2, 4, 0, TAU);
+  c.ellipse(-17, 10, 5, 9, -0.6, 0, TAU);     // thumb
   c.lineJoin = 'round'; c.strokeStyle = '#1e3a5f'; c.lineWidth = 6; c.stroke();
-  c.fillStyle = '#ffffff'; c.fill();
-  c.strokeStyle = 'rgba(30,58,95,0.35)'; c.lineWidth = 2;
-  c.beginPath(); c.moveTo(-2, 4); c.lineTo(-2, 14); c.moveTo(5, 4); c.lineTo(5, 14); c.stroke();
+  c.fillStyle = '#ffffff'; c.fill('nonzero');
+  c.strokeStyle = 'rgba(30,58,95,0.4)'; c.lineWidth = 1.8; c.lineCap = 'round';
+  c.beginPath(); c.moveTo(-3.5, -3); c.lineTo(-3.5, 6); c.moveTo(3.5, -2); c.lineTo(3.5, 6); c.moveTo(10.3, 0); c.lineTo(10.3, 7); c.stroke();
   c.restore();
 }
 function drawWolfTut() {
@@ -1252,7 +1260,7 @@ function drawWolfTut() {
   ctx.beginPath(); ctx.arc(cx, cy, (45 + k * 35) * sc, 0, TAU); ctx.stroke();
   const tap = Math.abs(Math.sin(game.time * 4));
   if (tap < 0.15) { ctx.fillStyle = 'rgba(255,255,255,0.5)'; circ(ctx, cx + 4 * S, cy + 6 * S, 12 * S); }
-  drawHand(cx + 20 * S, cy + 36 * S + tap * 12 * S, S * 1.1);
+  drawHand(cx + 28 * S, cy + 36 * S + tap * 12 * S, S * 1.1);
   const tut = game.wolfTut;
   const lines = tut.kind === 'fox' ? [T('foxTip1'), T('foxTip2')] : tut.kind === 'thief' ? [T('thiefTip1'), T('thiefTip2')] : [T('tapWolf')];
   const sz = Math.min(...lines.map(l => fitSize(l, 34 * S, W * 0.9)));
@@ -1261,7 +1269,7 @@ function drawWolfTut() {
 }
 function aimUpdate() {
   const sc = S * 1.15;
-  player.side = pointer.x < playerX ? -1 : 1; // бросает той рукой, с чьей стороны цель
+  player.side = pointer.x < playerX ? -1 : 1; // throw with the arm on the target's side
   player.aim = Math.atan2(pointer.y - (playerY - 54 * sc), pointer.x - (playerX + 14 * player.side * sc));
 }
 function fire() {
@@ -1282,8 +1290,8 @@ function update(dt) {
   if (game.banner) { game.banner.t += dt; if (game.banner.t > game.banner.life) game.banner = null; }
   aimUpdate();
   if (pointer.down && game.cool <= 0 && !game.ending) fire();
-  if (game.tutorial) { updateTutorial(dt); return; } // обучение: всё замерло, кроме снежинок
-  // обучение «Нажми на волка»: первый волк в 1-й волне, один раз
+  if (game.tutorial) { updateTutorial(dt); return; } // tutorial: everything is frozen except snowflakes
+  // "Hit the wolf" tutorial: first wolf of wave 1, shown once
   if (!game.wolfTut && !wolfTutDone && game.wave === 1 && !game.ending) {
     const w = wolves.find(w => w.state === 'chase' && w.x > 60 * S && w.x < W - 60 * S);
     if (w) game.wolfTut = { wolf: w, kind: 'wolf' };
@@ -1293,7 +1301,7 @@ function update(dt) {
     if (f) game.wolfTut = { wolf: f, kind: 'fox' };
   }
   if (game.wolfTut && game.wolfTut.wolf.state !== 'chase' && game.wolfTut.wolf.state !== 'emerge') game.wolfTut = null;
-  const worldDt = game.wolfTut ? dt * 0.3 : dt; // пока идёт обучение — замедление
+  const worldDt = game.wolfTut ? dt * 0.3 : dt; // slow motion while the tutorial is on
 
   if (!game.ending) {
     if (game.waveState === 'intro') { game.introT -= dt; if (game.introT <= 0) game.waveState = 'run'; }
@@ -1308,7 +1316,7 @@ function update(dt) {
     } else if (game.waveState === 'clear') { game.clearT -= dt; if (game.clearT <= 0) { showBreak(); return; } }
   } else { game.overT -= dt; if (game.overT <= 0) { gameOver(); return; } }
 
-  { const dt = worldDt; // зайцы и волки двигаются в замедлении во время обучения
+  { const dt = worldDt; // rabbits and wolves move in slow motion during the tutorial
   for (let i = rabbits.length - 1; i >= 0; i--) {
     const r = rabbits[i]; r.t += dt;
     if (r.state === 'flee') {
@@ -1326,7 +1334,7 @@ function update(dt) {
       if (dist(r.x, r.y, hx, hy) < 14 * S) { collect(r); rabbits.splice(i, 1); }
     }
   }
-  // волки
+  // wolves
   for (let i = wolves.length - 1; i >= 0; i--) {
     const w = wolves[i];
     if (w.flash > 0) w.flash -= dt;
@@ -1369,7 +1377,7 @@ function update(dt) {
     if (r) emergeThief(st, r);
   }
   }
-  // снежинки
+  // snowflakes
   outer: for (let i = flakes.length - 1; i >= 0; i--) {
     const f = flakes[i];
     f.x += f.vx * dt; f.y += f.vy * dt; f.rot += 9 * dt; f.life -= dt;
@@ -1381,7 +1389,7 @@ function update(dt) {
       const cx = w.x + 5 * sc * w.dir, cy = w.y - (small ? 40 : 45) * sc + foxHop(w);
       const dx = (f.x - cx) / (60 * sc + f.r), dy = (f.y - cy) / (38 * sc + f.r);
       if (dx * dx + dy * dy < 1) {
-        if (w.type === 'fox' && w.dodge > 0 && w.jumpT <= 0) { foxDodge(w); f.ignore = w; continue; } // увернулась — снежинка летит дальше
+        if (w.type === 'fox' && w.dodge > 0 && w.jumpT <= 0) { foxDodge(w); f.ignore = w; continue; } // dodged — the snowflake flies on
         hitWolf(w, f); flakes.splice(i, 1); continue outer;
       }
     }
@@ -1390,13 +1398,13 @@ function update(dt) {
       if (dist(f.x, f.y, p.x, p.y + p.bob) < 26 * S + f.r) { takePower(p); powerups.splice(j, 1); flakes.splice(i, 1); continue outer; }
     }
   }
-  // бонусы
+  // bonuses
   for (let i = powerups.length - 1; i >= 0; i--) {
     const p = powerups[i]; p.t += dt;
     if (p.y < p.ty) p.y += 90 * S * dt;
     else {
       p.life -= dt;
-      // бонус этого типа появился впервые — показываем обучение
+      // first time this bonus type appears — show the tutorial
       if (!p.seen) { p.seen = true; if (store.get('str_tut_' + p.type, '0') !== '1') { game.tutorial = p; game.tutT = 0; pointer.down = false; } }
     }
     p.x = p.bx + Math.sin(p.t * 1.3) * 30 * S; p.bob = Math.sin(p.t * 3) * 5 * S;
@@ -1415,7 +1423,7 @@ function updateFx(dt) {
   for (let i = popups.length - 1; i >= 0; i--) { const p = popups[i]; p.t += dt; p.y -= 45 * S * dt; if (p.t >= p.life) popups.splice(i, 1); }
 }
 
-/* ================= Отрисовка ================= */
+/* ================= Rendering ================= */
 const demoRabbit = { kind: 'demo', y: 0 };
 function render() {
   ctx.save();
@@ -1492,7 +1500,7 @@ function render() {
   }
 }
 
-/* ================= HUD и экраны ================= */
+/* ================= HUD and screens ================= */
 const ICON_ON = '<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z" fill="#1e3a5f"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="#1e3a5f" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
 const ICON_OFF = '<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z" fill="#1e3a5f"/><path d="M16 9l5 6M21 9l-5 6" stroke="#e23b4e" stroke-width="2.2" stroke-linecap="round"/></svg>';
 const MUSIC_ON = '<svg viewBox="0 0 24 24"><path d="M9 17V6l10-2v11" stroke="#1e3a5f" stroke-width="2" fill="none" stroke-linejoin="round"/><circle cx="6.5" cy="17" r="2.8" fill="#1e3a5f"/><circle cx="16.5" cy="15" r="2.8" fill="#1e3a5f"/></svg>';
@@ -1519,7 +1527,7 @@ function startGame() {
   game.state = 'play'; updateHud(); Poki.start(); Sound.duck(1);
   store.set('str_played', '1');
 }
-/* ---- Перерыв между волнами: +1 жизнь за рекламу, обычная реклама после чётных волн ---- */
+/* ---- Break between waves: +1 life for an ad, regular ads after even waves ---- */
 const betweenEl = $('between');
 function showBreak() {
   game.state = 'break'; pointer.down = false; game.banner = null; Poki.stop();
@@ -1530,7 +1538,7 @@ function showBreak() {
     `<div><span>${T('carrots')}</span><b>+${game.carrotsRun}</b></div>` +
     `<div><span>${T('lives')}</span><b class="hearts">${'♥'.repeat(game.lives)}</b></div>`;
   const life = $('btnLife'); life.disabled = false; life.classList.toggle('hidden', game.lives >= 5 || !Poki.canReward);
-  // подсказка «загляни в магазин»: когда морковок впервые хватает на покупку (до 3 раз, пока магазин не открыт)
+  // "visit the shop" hint: when carrots first cover a purchase (up to 3 times, until the shop is opened)
   const hintN = parseInt(store.get('str_tut_shop_n', '0'), 10) || 0;
   const hint = store.get('str_tut_shop', '0') !== '1' && hintN < 3 && carrots >= cheapestUnowned();
   if (hint) store.set('str_tut_shop_n', String(hintN + 1));
@@ -1549,13 +1557,13 @@ function gameOver() {
   $('ovScore').textContent = game.score; $('ovSaved').textContent = game.saved; $('ovBest').textContent = game.best;
   $('menuBest').textContent = game.best;
   $('ovNew').classList.toggle('hidden', !isNew);
-  $('btnContinue').classList.toggle('hidden', !Poki.canReward); // предлагаем продолжить после каждого проигрыша
+  $('btnContinue').classList.toggle('hidden', !Poki.canReward); // offer to continue after every loss
   $('ovCarrots').textContent = game.carrotsRun + game.bonusCarrots;
   $('btnDouble').disabled = false; $('btnDouble').classList.toggle('hidden', game.doubled || game.carrotsRun === 0 || !Poki.canReward);
   show(overEl);
 }
 
-/* ================= Морковки и скины ================= */
+/* ================= Carrots and skins ================= */
 const SKINS = {
   hat: [{ id: 'red', price: 0 }, { id: 'blue', price: 10 }, { id: 'green', price: 25 }, { id: 'bunny', price: 60 }, { id: 'crown', price: 120 }],
   shot: [{ id: 'flake', price: 0 }, { id: 'star', price: 15 }, { id: 'heart', price: 40 }, { id: 'crystal', price: 80 }, { id: 'gold', price: 150 }]
@@ -1566,7 +1574,7 @@ try { const sv = JSON.parse(store.get('str_skins', 'null')); if (sv && Array.isA
 function saveSkins() { store.set('str_skins', JSON.stringify(skins)); store.set('str_carrots', String(carrots)); }
 function updateCarrots(all) { document.querySelectorAll('.carrotCount').forEach(el => { el.textContent = carrots; }); if (all) $('hudCarrots').textContent = carrots; }
 function addCarrots(n) { carrots += n; saveSkins(); updateCarrots(); }
-// морковка летит от зайца к счётчику на верхней панели
+// a carrot flies from the rabbit to the counter in the top bar
 function flyCarrots(x, y, n) {
   const b = $('hudCarrotPill').getBoundingClientRect();
   for (let i = 0; i < n; i++) particles.push({ type: 'fly', x0: x, y0: y, x1: b.left + 18, y1: b.top + b.height / 2, t: -i * 0.15, dur: 0.7, r: 15 * S, life: 1, max: 1, color: '' });
@@ -1635,7 +1643,7 @@ function drawShot(x, y, r, rot, id) {
   }
   c.restore();
 }
-// рисуем превью в магазине теми же функциями, что и в игре
+// draw shop previews with the same functions as the game
 function withCtx(c, fn) { const old = ctx; ctx = c; try { fn(); } finally { ctx = old; } }
 function previewCanvas(kind, id) {
   const cv = document.createElement('canvas'), dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -1698,7 +1706,7 @@ $('btnDouble').addEventListener('click', () => {
 });
 updateCarrots(true);
 
-/* ================= Управление ================= */
+/* ================= Controls ================= */
 function setPointer(e) { pointer.x = e.clientX; pointer.y = e.clientY; }
 cvs.addEventListener('pointerdown', e => {
   e.preventDefault(); Sound.ensure(); setPointer(e);
@@ -1723,7 +1731,7 @@ window.addEventListener('keydown', e => {
   }
 });
 document.addEventListener('visibilitychange', () => { if (document.hidden) pauseGame(); Sound.suspend(document.hidden); });
-// музыка включается с первого касания (браузеры запрещают звук до действия игрока)
+// music starts on the first tap (browsers block audio before user input)
 function markInput() { if (hadInput) return; hadInput = true; if (game.state === 'play' && !game.ending) Poki.start(); }
 document.addEventListener('pointerdown', () => { Sound.ensure(); markInput(); }, true);
 window.addEventListener('resize', resize);
@@ -1739,7 +1747,7 @@ $('btnMusic').addEventListener('click', toggleMusic);
 $('btnNext').addEventListener('click', () => {
   if (game.state !== 'break') return;
   Sound.ensure(); hide(betweenEl); game.state = 'ad';
-  // обычная реклама — только после чётных волн (2, 4, 6...)
+  // regular ads only after even waves (2, 4, 6...)
   if (game.wave % 2 === 0) Poki.commercialBreak().then(proceedWave); else proceedWave();
 });
 $('btnLife').addEventListener('click', () => {
@@ -1748,7 +1756,7 @@ $('btnLife').addEventListener('click', () => {
   Poki.rewardedBreak().then(ok => {
     if (ok) {
       game.lives = Math.min(game.lives + 1, 5); updateHud(); Sound.power();
-      proceedWave(); // после рекламы за награду обычную не показываем
+      proceedWave(); // no regular ad right after a rewarded one
       popup(playerX, playerY - 135 * S, '+♥', '#ff4d6d', 34 * S);
     } else { game.state = 'break'; b.classList.add('hidden'); show(betweenEl); }
   });
@@ -1770,7 +1778,7 @@ $('btnContinue').addEventListener('click', () => {
   });
 });
 
-/* ---- Выбор языка ---- */
+/* ---- Language picker ---- */
 const langEl = $('langPick');
 function openLang() {
   $('langGrid').innerHTML = LANGS.map(([c, n]) => `<button data-lang="${c}" class="${c === lang ? 'on' : ''}" lang="${c}">${n}</button>`).join('');
@@ -1782,17 +1790,17 @@ langEl.addEventListener('click', e => {
   if (b) { store.set('str_lang', b.dataset.lang); applyLang(b.dataset.lang); updateHud(); hide(langEl); }
   else if (e.target === langEl) hide(langEl);
 });
-// язык: выбор игрока → язык браузера → английский (язык от Poki уточняется после init)
+// language: player's choice → browser language → English (Poki's language is applied after init)
 applyLang(pickLang(store.get('str_lang', '')) || (navigator.languages || [navigator.language]).map(pickLang).find(Boolean) || 'en');
 
-/* ================= Старт ================= */
-if (firstTime) hide(menuEl); else syncModal(); // первый запуск — сразу в игру, без меню
+/* ================= Start ================= */
+if (firstTime) hide(menuEl); else syncModal(); // first launch — straight into the game, no menu
 resize();
 updateMuteIcon();
 $('menuBest').textContent = game.best;
 let last = performance.now(), loopErr = false;
 function loop(now) {
-  requestAnimationFrame(loop); // следующий кадр заказываем сразу — одна ошибка не остановит игру
+  requestAnimationFrame(loop); // request the next frame first — a single error won't stop the game
   let dt = (now - last) / 1000; last = now;
   if (dt > 0.05) dt = 0.05; if (dt < 0) dt = 0;
   if (!bg) { resize(); if (!bg) return; }
