@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Спаси зайца!</title>
+<!--
+  ДЛЯ POKI: раскомментируйте строку ниже перед загрузкой игры в Poki for Developers.
+  Без неё игра работает сама по себе — рекламные вызовы просто пропускаются.
+-->
+<!-- <script src="https://game-cdn.poki.com/scripts/v2/poki-sdk.js"></script> -->
+<style>
+/*
+  VOICE: уютная зимняя сказка, детская и добрая
+  IDEA: ночной заснеженный лес как сцена кукольного театра
+  PICTURE: вся игра — нарисованная кодом сцена (ели, луна, снег, персонажи)
+  COLOUR and TYPE: глубокий синий + снежно-белый + красный акцент (шапка, сердца); жирный округлый шрифт
+  LAYOUT: холст на весь экран, HUD сверху, карточки меню по центру
+*/
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;min-height:480px;overflow:hidden;background:#16244a;touch-action:none;
+  user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;
+  font-family:"Trebuchet MS","Segoe UI",Roboto,system-ui,"PingFang SC","Hiragino Sans","Microsoft YaHei","Noto Sans CJK SC","Malgun Gothic","Apple SD Gothic Neo","Nirmala UI","Noto Sans Devanagari",sans-serif}
+#game{display:block;position:fixed;inset:0}
+.item canvas{display:block}
+.hidden{display:none!important}
+.overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(12,22,48,.45);padding:16px;z-index:5}
+.card{background:linear-gradient(#ffffff,#e4eefa);border-radius:26px;padding:26px 28px 22px;text-align:center;
+  box-shadow:0 14px 44px rgba(0,0,0,.4),inset 0 -4px 0 #c9d9ee;width:min(430px,100%);color:#1e3a5f}
+h1{margin:0 0 8px;font-size:clamp(34px,9vw,50px);line-height:1.05;color:#2563a8;text-shadow:0 3px 0 #bcd6f2}
+h2{margin:0 0 14px;font-size:32px;line-height:1.1;color:#2563a8}
+.sub{margin:0 0 16px;font-size:16px;line-height:1.45;color:#35557d}
+.how{display:grid;gap:6px;margin:0 0 18px;font-size:15px;color:#35557d;text-align:left;
+  background:#eef4fc;border-radius:14px;padding:12px 14px}
+.how b{color:#1e3a5f}
+.btn{font:inherit;font-weight:800;font-size:22px;border:0;border-radius:16px;padding:14px 30px;margin:6px;
+  cursor:pointer;color:#fff;background:linear-gradient(#ff8a3d,#f0602a);box-shadow:0 5px 0 #b8431a;min-height:52px}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 #b8431a}
+.btn:focus-visible{outline:3px solid #2563a8;outline-offset:3px}
+.btn.green{background:linear-gradient(#4cc97a,#2aa35a);box-shadow:0 5px 0 #1d7540;font-size:18px}
+.btn.green:active{box-shadow:0 2px 0 #1d7540}
+.btn.ad{background:linear-gradient(#5aa9ff,#2f7fd1);box-shadow:0 5px 0 #1f5fa3;font-size:18px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn.ad:active{box-shadow:0 2px 0 #1f5fa3}
+.btn.same{width:min(300px,100%);margin-left:auto;margin-right:auto;display:flex;align-items:center;justify-content:center;gap:8px}
+.adico{width:26px;height:26px;flex:none;filter:drop-shadow(0 1px 0 rgba(0,0,0,.2))}
+.langbtn .adico rect{fill:#2f7fd1}.langbtn .adico path{fill:#ffffff}
+.card{max-height:calc(100% - 8px);overflow-y:auto;touch-action:pan-y}
+.btn:disabled{opacity:.6}
+.best{margin-top:10px;font-size:15px;color:#5a7699}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 14px}
+.stats div{background:#eef4fc;border-radius:14px;padding:10px 4px}
+.stats span{display:block;font-size:13px;color:#5a7699}
+.stats b{display:block;font-size:26px;color:#1e3a5f}
+.newrec{font-weight:800;color:#e23b4e;font-size:20px;margin:0 0 10px}
+#hud{position:fixed;top:0;left:0;right:0;display:flex;gap:8px;align-items:center;z-index:6;pointer-events:none;
+  padding:max(10px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) 10px max(12px,env(safe-area-inset-left))}
+.pill{background:rgba(255,255,255,.88);border-radius:999px;padding:6px 14px;font-weight:800;color:#1e3a5f;font-size:18px;
+  box-shadow:0 3px 0 rgba(0,0,0,.15);white-space:nowrap}
+.pill small{font-size:12px;color:#5a7699;font-weight:700}
+#hudLives span{color:#e23b4e;letter-spacing:1px}
+#hudLives span.lost{opacity:.22}
+.overlay.soft{background:rgba(12,22,48,.25)}
+.spacer{flex:1}
+.langbtn{font:inherit;font-weight:700;font-size:16px;display:inline-flex;align-items:center;gap:8px;margin-top:12px;padding:8px 16px;min-height:44px;
+  border-radius:999px;border:2px solid #c9d9ee;background:#fff;color:#1e3a5f;cursor:pointer}
+.langbtn svg{width:20px;height:20px;flex:none}
+.langgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.langgrid button{font:inherit;font-weight:700;font-size:17px;min-height:48px;border-radius:14px;border:2px solid #c9d9ee;background:#fff;color:#1e3a5f;cursor:pointer}
+.langgrid button.on{background:#2563a8;color:#fff;border-color:#2563a8}
+#langPick{z-index:7}
+#shop{z-index:7}
+.carrot{width:20px;height:20px;flex:none}
+.shopbtn{margin-top:4px}
+.shopcard{max-height:92vh;max-height:92dvh;overflow-y:auto;touch-action:pan-y;padding:20px 18px}
+.shopcard h3{margin:14px 0 8px;font-size:18px;color:#35557d;text-align:left}
+.balance{display:flex;align-items:center;justify-content:center;gap:6px;font-weight:800;font-size:22px;color:#d9631e}
+.balance .carrot{width:26px;height:26px}
+.items{display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));gap:8px}
+.item{font:inherit;font-weight:800;font-size:14px;color:#1e3a5f;background:#eef4fc;border:2px solid transparent;border-radius:14px;
+  padding:6px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;min-height:44px}
+.item canvas{width:64px;height:64px}
+.item.on{border-color:#2563a8;background:#dfeafb}
+.item.locked{opacity:.5}
+.item .price{display:flex;align-items:center;gap:3px}
+.item .price .carrot{width:16px;height:16px}
+.carrotline{display:flex;align-items:center;justify-content:center;gap:6px;font-weight:800;font-size:20px;color:#d9631e;margin:0 0 6px}
+.minor{display:flex;justify-content:center;flex-wrap:wrap;gap:8px}
+.shopwrap{position:relative;display:inline-block}
+.tapHand{position:absolute;right:-22px;bottom:-34px;width:42px;height:50px;pointer-events:none;display:none;animation:tap .9s ease-in-out infinite}
+.hinting .tapHand{display:block}
+.hinting .langbtn{border-color:#ffb020;animation:glow 1.2s ease-in-out infinite}
+@keyframes tap{50%{transform:translate(-7px,-9px)}}
+@keyframes glow{50%{box-shadow:0 0 0 7px rgba(255,176,32,.4)}}
+.shophint{margin:8px 0 8px;font-weight:800;font-size:16px;color:#d9631e;line-height:1.35}
+@media (prefers-reduced-motion:reduce){.tapHand,.hinting .langbtn{animation:none}}
+#btnDouble{justify-content:center;text-align:center}
+.rows{display:grid;gap:6px;margin:0 0 16px}
+.rows div{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#eef4fc;border-radius:12px;padding:9px 16px;font-size:17px;color:#35557d}
+.rows b{color:#1e3a5f;font-size:19px}
+.rows .hearts{color:#e23b4e;letter-spacing:2px}
+.pills{display:flex;flex-wrap:wrap;gap:8px;align-self:flex-start}
+#hudSavedPill,#hudCarrotPill{display:flex;align-items:center;gap:4px}
+.ico{width:22px;height:22px;flex:none}
+.bump{animation:bump .35s ease-out}
+@keyframes bump{40%{transform:scale(1.25)}}
+#hud>.ibtn{align-self:flex-start;flex:none}
+#hud.menu-mode .pill,#hud.menu-mode #btnPause{display:none}
+.ibtn{pointer-events:auto;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.88);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 3px 0 rgba(0,0,0,.15);padding:0}
+.ibtn svg{width:24px;height:24px}
+@media(max-height:520px){
+  body.modal #hud{display:none}
+  .overlay{padding:6px}.card{padding:12px 18px 10px}
+  h1{font-size:30px;margin-bottom:4px}h2{font-size:22px;margin-bottom:6px}
+  .btn{font-size:17px;padding:8px 18px;min-height:42px;margin:4px auto}
+  .btn.same{width:min(260px,100%)}
+  .rows{grid-template-columns:1fr 1fr;gap:4px;margin-bottom:6px}.rows div{padding:5px 12px;font-size:15px}.rows b{font-size:16px}
+  .stats{margin-bottom:6px}.stats div{padding:4px}.stats b{font-size:20px}
+  .newrec{font-size:16px;margin-bottom:4px}.carrotline{font-size:17px;margin-bottom:2px}
+  .langbtn{margin-top:4px;min-height:40px;padding:6px 14px}.shophint{margin:4px 0}
+  .items{grid-template-columns:repeat(auto-fill,minmax(80px,1fr))}
+}
+@media(max-width:420px){.pill{font-size:15px;padding:5px 10px}.pill small{display:none}#hud{gap:6px}.pills{gap:6px}.ico{width:19px;height:19px}}
+</style>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<div id="hud" class="menu-mode">
+  <div class="pills">
+    <div class="pill"><small data-i18n="scoreSmall">очки</small> <span id="hudScore">0</span></div>
+    <div class="pill" id="hudWave">Волна 1</div>
+    <div class="pill" id="hudLives"></div>
+    <div class="pill" id="hudSavedPill" data-i18n-title="savedRabbits"><svg class="ico" viewBox="0 0 24 24"><ellipse cx="8.5" cy="7" rx="2.6" ry="6" transform="rotate(-12 8.5 7)" fill="#8aa3c4"/><ellipse cx="15.5" cy="7" rx="2.6" ry="6" transform="rotate(12 15.5 7)" fill="#8aa3c4"/><ellipse cx="8.6" cy="7.4" rx="1.1" ry="4" transform="rotate(-12 8.6 7.4)" fill="#ffc2d1"/><ellipse cx="15.4" cy="7.4" rx="1.1" ry="4" transform="rotate(12 15.4 7.4)" fill="#ffc2d1"/><circle cx="12" cy="15.5" r="6.5" fill="#8aa3c4"/><circle cx="9.6" cy="14.6" r="1.1" fill="#1e3a5f"/><circle cx="14.4" cy="14.6" r="1.1" fill="#1e3a5f"/><circle cx="12" cy="17.2" r="1.1" fill="#ff8fa8"/></svg><span id="hudSaved">0</span></div>
+    <div class="pill" id="hudCarrotPill" data-i18n-title="carrots"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5 10 9.6q2.6-2.2 4.6-.3 1.9 2-.3 4.6z" fill="#ff8a2a"/><path d="M7 15.5l2 1M9.5 12.2l2 1" stroke="#d9631e" stroke-width="1.2" stroke-linecap="round"/><path d="M13.8 9.6Q14.6 4 19 2.8q-1.4 4.3-5.2 6.8zM14.4 10.2q4.9-2.3 7.3.4-4.3 1.7-7.3-.4z" fill="#2fa35a"/></svg><span id="hudCarrots">0</span></div>
+  </div>
+  <div class="spacer"></div>
+  <button class="ibtn" id="btnMusic" data-i18n-aria="music" aria-label="Music"></button>
+  <button class="ibtn" id="btnMute" data-i18n-aria="sounds" aria-label="Sounds"></button>
+  <button class="ibtn" id="btnPause" data-i18n-aria="pause" aria-label="Pause">
+    <svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1.5" fill="#1e3a5f"/><rect x="14" y="5" width="4" height="14" rx="1.5" fill="#1e3a5f"/></svg>
+  </button>
+</div>
+
+<div id="menu" class="overlay">
+  <div class="card">
+    <h1 data-i18n="title">Спаси зайца!</h1>
+    <button class="btn" id="btnPlay" data-i18n="play">Играть</button>
+    <div><button class="langbtn shopbtn" data-open-shop><svg class="carrot" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5 10 9.6q2.6-2.2 4.6-.3 1.9 2-.3 4.6z" fill="#ff8a2a"/><path d="M7 15.5l2 1M9.5 12.2l2 1" stroke="#d9631e" stroke-width="1.2" stroke-linecap="round"/><path d="M13.8 9.6Q14.6 4 19 2.8q-1.4 4.3-5.2 6.8zM14.4 10.2q4.9-2.3 7.3.4-4.3 1.7-7.3-.4z" fill="#2fa35a"/></svg><span data-i18n="shop">Магазин</span> · <b class="carrotCount">0</b></button></div>
+    <div class="best"><span data-i18n="best">Рекорд</span>: <span id="menuBest">0</span></div>
+    <button class="langbtn" data-open-lang><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="#2563a8" stroke-width="2"/><path d="M3 12h18M12 3c2.8 3 2.8 15 0 18M12 3c-2.8 3-2.8 15 0 18" fill="none" stroke="#2563a8" stroke-width="2"/></svg><span class="langname"></span></button>
+  </div>
+</div>
+
+<div id="pause" class="overlay hidden">
+  <div class="card">
+    <h2 data-i18n="pause">Пауза</h2>
+    <button class="btn" id="btnResume" data-i18n="resume">Продолжить</button>
+    <div class="minor"><button class="langbtn" data-open-shop><svg class="carrot" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5 10 9.6q2.6-2.2 4.6-.3 1.9 2-.3 4.6z" fill="#ff8a2a"/><path d="M7 15.5l2 1M9.5 12.2l2 1" stroke="#d9631e" stroke-width="1.2" stroke-linecap="round"/><path d="M13.8 9.6Q14.6 4 19 2.8q-1.4 4.3-5.2 6.8zM14.4 10.2q4.9-2.3 7.3.4-4.3 1.7-7.3-.4z" fill="#2fa35a"/></svg><span data-i18n="shop">Магазин</span></button>
+    <button class="langbtn" data-open-lang><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="#2563a8" stroke-width="2"/><path d="M3 12h18M12 3c2.8 3 2.8 15 0 18M12 3c-2.8 3-2.8 15 0 18" fill="none" stroke="#2563a8" stroke-width="2"/></svg><span class="langname"></span></button></div>
+  </div>
+</div>
+
+<div id="between" class="overlay soft hidden">
+  <div class="card">
+    <h2 id="brTitle">Волна пройдена!</h2>
+    <div class="rows" id="brSub"></div>
+    <button class="btn green same" id="btnNext" data-i18n="next">Дальше</button>
+    <button class="btn ad same" id="btnLife"><svg class="adico" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3.5" fill="#ffffff"/><path d="M10 9l5 3-5 3z" fill="#1f5fa3"/></svg><span data-i18n="lifeAd">+1 ♥ за рекламу</span></button>
+    <p class="shophint hidden" id="brShopHint" data-i18n="shopHint"></p>
+    <div class="minor"><span class="shopwrap"><button class="langbtn" id="btnBrShop" data-open-shop><svg class="carrot" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5 10 9.6q2.6-2.2 4.6-.3 1.9 2-.3 4.6z" fill="#ff8a2a"/><path d="M7 15.5l2 1M9.5 12.2l2 1" stroke="#d9631e" stroke-width="1.2" stroke-linecap="round"/><path d="M13.8 9.6Q14.6 4 19 2.8q-1.4 4.3-5.2 6.8zM14.4 10.2q4.9-2.3 7.3.4-4.3 1.7-7.3-.4z" fill="#2fa35a"/></svg><span data-i18n="shop">Магазин</span> · <b class="carrotCount">0</b></button><svg class="tapHand" id="brHand" viewBox="0 0 44 52" aria-hidden="true"><defs><g id="handShape"><rect x="16" y="2" width="11" height="30" rx="5.5"/><rect x="8" y="23" width="28" height="26" rx="9"/><ellipse cx="9" cy="33" rx="5" ry="8" transform="rotate(-25 9 33)"/></g></defs><g transform="rotate(-30 22 26)"><use href="#handShape" fill="#1e3a5f" stroke="#1e3a5f" stroke-width="5" stroke-linejoin="round"/><use href="#handShape" fill="#ffffff"/></g></svg></span></div>
+  </div>
+</div>
+
+<div id="langPick" class="overlay hidden">
+  <div class="card">
+    <h2 data-i18n="language">Язык</h2>
+    <div class="langgrid" id="langGrid"></div>
+  </div>
+</div>
+
+<div id="shop" class="overlay hidden">
+  <div class="card shopcard">
+    <h2 data-i18n="shop">Магазин</h2>
+    <div class="balance"><svg class="carrot" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5 10 9.6q2.6-2.2 4.6-.3 1.9 2-.3 4.6z" fill="#ff8a2a"/><path d="M7 15.5l2 1M9.5 12.2l2 1" stroke="#d9631e" stroke-width="1.2" stroke-linecap="round"/><path d="M13.8 9.6Q14.6 4 19 2.8q-1.4 4.3-5.2 6.8zM14.4 10.2q4.9-2.3 7.3.4-4.3 1.7-7.3-.4z" fill="#2fa35a"/></svg><b class="carrotCount">0</b></div>
+    <h3 data-i18n="hats">Шапки</h3>
+    <div class="items" id="shopHats"></div>
+    <h3 data-i18n="shots">Снежинки</h3>
+    <div class="items" id="shopShots"></div>
+    <button class="btn" id="btnShopBack" data-i18n="back">Назад</button>
+  </div>
+</div>
+
+<div id="over" class="overlay hidden">
+  <div class="card">
+    <h2 data-i18n="gameOver">Игра окончена</h2>
+    <div class="stats">
+      <div><span data-i18n="score">Очки</span><b id="ovScore">0</b></div>
+      <div><span data-i18n="saved">Спасено</span><b id="ovSaved">0</b></div>
+      <div><span data-i18n="best">Рекорд</span><b id="ovBest">0</b></div>
+    </div>
+    <div id="ovNew" class="newrec hidden" data-i18n="newRecord">Новый рекорд!</div>
+    <div class="carrotline"><svg class="carrot" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5 10 9.6q2.6-2.2 4.6-.3 1.9 2-.3 4.6z" fill="#ff8a2a"/><path d="M7 15.5l2 1M9.5 12.2l2 1" stroke="#d9631e" stroke-width="1.2" stroke-linecap="round"/><path d="M13.8 9.6Q14.6 4 19 2.8q-1.4 4.3-5.2 6.8zM14.4 10.2q4.9-2.3 7.3.4-4.3 1.7-7.3-.4z" fill="#2fa35a"/></svg><span>+<b id="ovCarrots">0</b></span></div>
+    <button class="btn green same" id="btnRestart" data-i18n="again">Ещё раз</button>
+    <button class="btn ad same" id="btnContinue"><svg class="adico" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3.5" fill="#ffffff"/><path d="M10 9l5 3-5 3z" fill="#1f5fa3"/></svg><span data-i18n="continueAd">Продолжить (реклама)</span></button>
+    <div class="minor">
+      <button class="langbtn" id="btnDouble"><svg class="adico" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="3.5" fill="#ffffff"/><path d="M10 9l5 3-5 3z" fill="#1f5fa3"/></svg><svg class="carrot" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5 10 9.6q2.6-2.2 4.6-.3 1.9 2-.3 4.6z" fill="#ff8a2a"/><path d="M7 15.5l2 1M9.5 12.2l2 1" stroke="#d9631e" stroke-width="1.2" stroke-linecap="round"/><path d="M13.8 9.6Q14.6 4 19 2.8q-1.4 4.3-5.2 6.8zM14.4 10.2q4.9-2.3 7.3.4-4.3 1.7-7.3-.4z" fill="#2fa35a"/></svg><span data-i18n="doubleAd">Удвоить морковки (реклама)</span></button>
+      <button class="langbtn" data-open-shop><svg class="carrot" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 20.5 10 9.6q2.6-2.2 4.6-.3 1.9 2-.3 4.6z" fill="#ff8a2a"/><path d="M7 15.5l2 1M9.5 12.2l2 1" stroke="#d9631e" stroke-width="1.2" stroke-linecap="round"/><path d="M13.8 9.6Q14.6 4 19 2.8q-1.4 4.3-5.2 6.8zM14.4 10.2q4.9-2.3 7.3.4-4.3 1.7-7.3-.4z" fill="#2fa35a"/></svg><span data-i18n="shop">Магазин</span></button>
+    </div>
+  </div>
+</div>
+
+<script>
+{
+'use strict';
+
+/* ================= Poki SDK (безопасная обёртка) ================= */
+// В сборке для Poki есть тег SDK. Без него (локальный тест) награды выдаются сразу.
+const DEV = !document.querySelector('script[src*="poki-sdk"]');
+let hadInput = false; // Poki: gameplayStart — только после первого действия игрока, не при загрузке
+const Poki = (() => {
+  const sdk = () => window.PokiSDK;
+  let ready = false, playing = false;
+  return {
+    get on() { return ready && !!sdk(); },
+    init() {
+      if (!sdk()) return Promise.resolve();
+      return sdk().init().then(() => { ready = true; }).catch(() => { ready = true; }); // адблок: игра всё равно работает
+    },
+    loadingFinished() { if (this.on) sdk().gameLoadingFinished(); },
+    start() { if (playing || !hadInput) return; playing = true; if (this.on) sdk().gameplayStart(); },
+    get canReward() { return this.on || DEV; },
+    stop() { if (!playing) return; playing = false; if (this.on) sdk().gameplayStop(); },
+    commercialBreak() {
+      this.stop();
+      if (!this.on) return Promise.resolve();
+      return sdk().commercialBreak(() => Sound.adMute(true))
+        .then(() => Sound.adMute(false)).catch(() => Sound.adMute(false));
+    },
+    rewardedBreak() {
+      this.stop();
+      if (!this.on) return Promise.resolve(DEV); // без SDK: в тесте награда сразу, в сборке для Poki — нет (блокировщик рекламы)
+      return sdk().rewardedBreak({ size: 'small', onStart: () => Sound.adMute(true) })
+        .then(r => { Sound.adMute(false); return !!r; })
+        .catch(() => { Sound.adMute(false); return false; });
+    }
+  };
+})();
+
+/* ================= Хранилище ================= */
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+};
+
+/* ================= Звук и музыка (WebAudio, без файлов) ================= */
+const Sound = (() => {
+  let ac = null, master = null, sfx = null, musicIn = null, musicGain = null, noiseBuf = null;
+  let muted = store.get('str_muted', '0') === '1', musicOn = store.get('str_music', '1') === '1', adMuted = false;
+  let level = 1;
+  const musicVol = () => musicOn ? 0.35 * level : 0;
+  const apply = () => {
+    if (!ac) return;
+    master.gain.setTargetAtTime(adMuted ? 0 : 0.6, ac.currentTime, 0.05);
+    sfx.gain.setTargetAtTime(muted ? 0 : 1, ac.currentTime, 0.05);
+    musicGain.gain.setTargetAtTime(musicVol(), ac.currentTime, 0.25);
+  };
+  const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+
+  // --- Музыка: зимняя мелодия «музыкальная шкатулка», ля минор, 8 тактов ---
+  const MELODY = [
+    76,0,72,0,69,72,76,0,  77,0,76,0,72,0,69,0,  72,0,74,76,79,0,76,0,  74,0,71,0,67,0,0,0,
+    76,0,72,0,69,72,76,81, 79,0,77,0,76,0,72,0,  74,0,77,0,76,74,72,0,  71,0,68,0,64,0,0,0
+  ];
+  const BASS = [45, 41, 48, 43, 45, 41, 50, 40];
+  const CHORDS = [[57,60,64],[53,57,60],[55,60,64],[55,59,62],[57,60,64],[53,57,60],[57,62,65],[56,59,64]];
+  let playing = false, step = 0, nextT = 0, timer = null, tempo = 96, intensity = 0;
+
+  function voice(freq, t, dur, type, vol, attack, dest) {
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(vol, t + attack);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(dest); o.start(t); o.stop(t + dur + 0.05);
+  }
+  function jingle(t, vol) {
+    const s = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+    s.buffer = noiseBuf; f.type = 'highpass'; f.frequency.value = 7000;
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+    s.connect(f); f.connect(g); g.connect(musicIn); s.start(t); s.stop(t + 0.15);
+  }
+  function scheduleStep(i, t, len) {
+    const bar = Math.floor(i / 8), beat = i % 8, chord = CHORDS[bar];
+    const m = MELODY[i];
+    if (m) { voice(mtof(m), t, 1.0, 'sine', 0.13, 0.004, musicIn); voice(mtof(m) * 2, t, 0.35, 'triangle', 0.03, 0.004, musicIn); }
+    if (beat === 0) for (const n of chord) voice(mtof(n), t, len * 8.2, 'sine', 0.035, 0.4, musicIn);
+    if (beat === 0 || beat === 4) voice(mtof(BASS[bar]), t, len * 3.5, 'triangle', 0.11, 0.01, musicIn);
+    if (intensity >= 1 && beat % 2 === 1) voice(mtof(chord[(beat >> 1) % 3] + 12), t, 0.3, 'triangle', 0.025, 0.004, musicIn);
+    if (intensity >= 2 && (beat === 2 || beat === 6)) jingle(t, 0.05);
+    if (intensity >= 2 && beat % 2 === 1) jingle(t, 0.02);
+  }
+  function tick() {
+    if (!playing || !ac) return;
+    while (nextT < ac.currentTime + 0.25) {
+      const len = 60 / tempo / 2;
+      if (musicOn && !adMuted) scheduleStep(step, nextT, len);
+      nextT += len; step = (step + 1) % MELODY.length;
+    }
+  }
+  function startMusic() {
+    if (!ac || playing) return;
+    playing = true; step = 0; nextT = ac.currentTime + 0.15;
+    timer = setInterval(tick, 50); tick();
+  }
+
+  function ensure() {
+    if (!ac) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      try {
+        ac = new AC();
+        master = ac.createGain(); master.gain.value = adMuted ? 0 : 0.6; master.connect(ac.destination);
+        sfx = ac.createGain(); sfx.gain.value = muted ? 0 : 1; sfx.connect(master);
+        musicGain = ac.createGain(); musicGain.gain.value = musicVol(); musicGain.connect(master);
+        musicIn = ac.createGain(); musicIn.connect(musicGain);
+        const delay = ac.createDelay(1), fb = ac.createGain(), lp = ac.createBiquadFilter();
+        delay.delayTime.value = 0.42; fb.gain.value = 0.28; lp.type = 'lowpass'; lp.frequency.value = 2500;
+        musicIn.connect(delay); delay.connect(lp); lp.connect(fb); fb.connect(delay); lp.connect(musicGain);
+        noiseBuf = ac.createBuffer(1, Math.floor(ac.sampleRate * 0.2), ac.sampleRate);
+        const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      } catch (e) { ac = null; return; }
+    }
+    if (ac.state === 'suspended' && !document.hidden) ac.resume().catch(() => {});
+    startMusic();
+  }
+  function tone(f1, f2, dur, type, vol, delay) {
+    if (!ac || muted || adMuted) return;
+    const t = ac.currentTime + (delay || 0), o = ac.createOscillator(), g = ac.createGain();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(f1, t);
+    if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol || 0.15, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(sfx); o.start(t); o.stop(t + dur + 0.03);
+  }
+  return {
+    ensure,
+    get muted() { return muted; },
+    get musicOn() { return musicOn; },
+    // кнопка «звуки» — только эффекты (броски, попадания)
+    toggle() { muted = !muted; store.set('str_muted', muted ? '1' : '0'); apply(); return muted; },
+    // кнопка «музыка» — только фоновая мелодия
+    toggleMusic() { musicOn = !musicOn; store.set('str_music', musicOn ? '1' : '0'); apply(); return musicOn; },
+    adMute(v) { adMuted = v; apply(); },
+    // громкость музыки: 1 — игра, меньше — пауза / конец игры
+    duck(v) { level = v; apply(); },
+    // музыка ускоряется и становится насыщеннее с каждой волной
+    setWave(n) { tempo = 96 + Math.min(n - 1, 6) * 3; intensity = n >= 5 ? 2 : n >= 3 ? 1 : 0; },
+    suspend(hidden) { if (!ac) return; if (hidden) ac.suspend().catch(() => {}); else if (!adMuted) ac.resume().catch(() => {}); },
+    throw() { tone(1500, 600, 0.11, 'triangle', 0.07); },
+    hit() { tone(330, 110, 0.16, 'square', 0.06); tone(1000, 2000, 0.09, 'sine', 0.07, 0.02); },
+    flee() { tone(520, 180, 0.35, 'sawtooth', 0.045); },
+    save() { [660, 880, 1100, 1320].forEach((f, i) => tone(f, 0, 0.13, 'sine', 0.12, i * 0.07)); },
+    caught() { tone(420, 140, 0.55, 'triangle', 0.16); },
+    power() { [520, 780, 1040].forEach((f, i) => tone(f, f * 1.5, 0.15, 'sine', 0.1, i * 0.06)); },
+    over() { [440, 370, 311, 262].forEach((f, i) => tone(f, 0, 0.26, 'triangle', 0.14, i * 0.18)); }
+  };
+})();
+
+/* ================= Языки ================= */
+// Все тексты игры в одном месте. {n} подставляется числом.
+const LANGS = [
+  ['en', 'English'], ['ru', 'Русский'], ['pt', 'Português'], ['tr', 'Türkçe'],
+  ['es', 'Español'], ['fr', 'Français'], ['de', 'Deutsch'], ['it', 'Italiano'],
+  ['zh', '简体中文'], ['ja', '日本語'], ['ko', '한국어'], ['hi', 'हिन्दी']
+];
+const NB = ' '; // неразрывный пробел (во французском перед ! и :)
+const I18N = {
+  en: {
+    title: 'Save the Rabbit!',
+    play: 'Play', best: 'Best', pause: 'Paused', resume: 'Resume',
+    waveCleared: 'Wave {n} cleared!', waveClearedShort: 'Wave cleared!',
+    lifeAd: '+1 ♥ (watch an ad)', next: 'Next', gameOver: 'Game over',
+    score: 'Score', saved: 'Saved', newRecord: 'New record!',
+    continueAd: 'Continue (watch an ad)', again: 'Play again', scoreSmall: 'score',
+    wave: 'Wave {n}', savedRabbits: 'Rabbits saved', music: 'Music', sounds: 'Sounds',
+    saveBunnies: 'Save the bunnies!', wolvesTougher: 'Tougher wolves: {n} hits', moreWolves: 'More wolves!',
+    bonus: 'Bonus +{n}', savedPop: 'Saved!', triplePop: '3 snowflakes!',
+    tutTitle: 'A bonus!', tutHit: 'Hit it with a snowflake', tutLife: 'to get +1 life!',
+    tutTriple: 'to throw 3 snowflakes at once!', tutDuration: 'Lasts 8 seconds',
+    hint1: 'Tap to throw snowflakes', hint2: 'Hit the wolf — save the bunny!',
+    waveBonus: 'Wave bonus', lives: 'Lives', retry: 'One more try!', wolvesFled: 'The wolves ran away',
+    tapWolf: 'Hit the wolf!', great: 'Great!', rabbitSaved: 'Bunny saved!',
+    newFox: 'New enemy: the sly fox!', newThief: 'Careful: foxes hide behind rocks!',
+    foxTip1: 'The sly fox dodges!', foxTip2: 'Throw two snowflakes in a row!', thiefTip1: 'Thief fox!', thiefTip2: 'Hit her — protect the bunny!', dodged: 'Dodged!',
+    shop: 'Shop', hats: 'Hats', shots: 'Snowflakes', select: 'Select', selected: 'Selected', back: 'Back', carrots: 'Carrots', doubleAd: 'Double carrots (watch an ad)',
+    shopHint: 'You have enough carrots for something new — visit the shop!',
+    language: 'Language'
+  },
+  ru: {
+    title: 'Спаси зайца!',
+    play: 'Играть', best: 'Рекорд', pause: 'Пауза', resume: 'Продолжить',
+    waveCleared: 'Волна {n} пройдена!', waveClearedShort: 'Волна пройдена!',
+    lifeAd: '+1 ♥ за рекламу', next: 'Дальше', gameOver: 'Игра окончена',
+    score: 'Очки', saved: 'Спасено', newRecord: 'Новый рекорд!',
+    continueAd: 'Продолжить (реклама)', again: 'Ещё раз', scoreSmall: 'очки',
+    wave: 'Волна {n}', savedRabbits: 'Спасено зайцев', music: 'Музыка', sounds: 'Звуки',
+    saveBunnies: 'Спаси зайчиков!', wolvesTougher: 'Волки крепче: {n} попадания', moreWolves: 'Волков всё больше!',
+    bonus: 'Бонус +{n}', savedPop: 'Спасён!', triplePop: 'По 3 снежинки!',
+    tutTitle: 'Это бонус!', tutHit: 'Попади в него снежинкой', tutLife: 'и получишь +1 жизнь!',
+    tutTriple: 'и будешь бросать по 3 снежинки!', tutDuration: 'Действует 8 секунд',
+    hint1: 'Нажимай, чтобы бросать снежинки', hint2: 'Попади в волка — спаси зайца!',
+    waveBonus: 'Бонус за волну', lives: 'Жизни', retry: 'Ещё попытка!', wolvesFled: 'Волки разбежались',
+    tapWolf: 'Нажми на волка!', great: 'Отлично!', rabbitSaved: 'Заяц спасён!',
+    newFox: 'Новый враг: хитрая лиса!', newThief: 'Осторожно: за камнями прячутся лисы!',
+    foxTip1: 'Хитрая лиса увернётся!', foxTip2: 'Бросай две снежинки подряд!', thiefTip1: 'Лиса-воровка!', thiefTip2: 'Попади в неё — защити зайца!', dodged: 'Увернулась!',
+    shop: 'Магазин', hats: 'Шапки', shots: 'Снежинки', select: 'Выбрать', selected: 'Выбрано', back: 'Назад', carrots: 'Морковки', doubleAd: 'Удвоить морковки (реклама)',
+    shopHint: 'Хватает морковок на обновку — загляни в магазин!',
+    language: 'Язык'
+  },
+  pt: {
+    title: 'Salve o Coelho!',
+    play: 'Jogar', best: 'Recorde', pause: 'Pausa', resume: 'Continuar',
+    waveCleared: 'Onda {n} concluída!', waveClearedShort: 'Onda concluída!',
+    lifeAd: '+1 ♥ (ver anúncio)', next: 'Próxima', gameOver: 'Fim de jogo',
+    score: 'Pontos', saved: 'Salvos', newRecord: 'Novo recorde!',
+    continueAd: 'Continuar (ver anúncio)', again: 'Jogar de novo', scoreSmall: 'pontos',
+    wave: 'Onda {n}', savedRabbits: 'Coelhos salvos', music: 'Música', sounds: 'Sons',
+    saveBunnies: 'Salve os coelhinhos!', wolvesTougher: 'Lobos mais fortes: {n} acertos', moreWolves: 'Mais lobos!',
+    bonus: 'Bônus +{n}', savedPop: 'Salvo!', triplePop: '3 flocos!',
+    tutTitle: 'É um bônus!', tutHit: 'Acerte-o com um floco de neve', tutLife: 'e ganhe +1 vida!',
+    tutTriple: 'e jogue 3 flocos de uma vez!', tutDuration: 'Dura 8 segundos',
+    hint1: 'Toque para jogar flocos de neve', hint2: 'Acerte o lobo — salve o coelho!',
+    waveBonus: 'Bônus da onda', lives: 'Vidas', retry: 'Mais uma chance!', wolvesFled: 'Os lobos fugiram',
+    tapWolf: 'Acerte o lobo!', great: 'Muito bem!', rabbitSaved: 'Coelho salvo!',
+    newFox: 'Novo inimigo: a raposa esperta!', newThief: 'Cuidado: raposas se escondem atrás das pedras!',
+    foxTip1: 'A raposa esperta desvia!', foxTip2: 'Jogue dois flocos seguidos!', thiefTip1: 'Raposa ladra!', thiefTip2: 'Acerte-a — proteja o coelho!', dodged: 'Desviou!',
+    shop: 'Loja', hats: 'Gorros', shots: 'Flocos', select: 'Escolher', selected: 'Escolhido', back: 'Voltar', carrots: 'Cenouras', doubleAd: 'Dobrar cenouras (ver anúncio)',
+    shopHint: 'Você já tem cenouras para algo novo — visite a loja!',
+    language: 'Idioma'
+  },
+  tr: {
+    title: 'Tavşanı Kurtar!',
+    play: 'Oyna', best: 'Rekor', pause: 'Duraklatıldı', resume: 'Devam et',
+    waveCleared: 'Dalga {n} tamamlandı!', waveClearedShort: 'Dalga tamamlandı!',
+    lifeAd: '+1 ♥ (reklam izle)', next: 'İleri', gameOver: 'Oyun bitti',
+    score: 'Puan', saved: 'Kurtarılan', newRecord: 'Yeni rekor!',
+    continueAd: 'Devam et (reklam izle)', again: 'Tekrar oyna', scoreSmall: 'puan',
+    wave: 'Dalga {n}', savedRabbits: 'Kurtarılan tavşan', music: 'Müzik', sounds: 'Sesler',
+    saveBunnies: 'Tavşanları kurtar!', wolvesTougher: 'Kurtlar güçlendi: {n} vuruş', moreWolves: 'Daha çok kurt!',
+    bonus: 'Bonus +{n}', savedPop: 'Kurtarıldı!', triplePop: '3 kar tanesi!',
+    tutTitle: 'Bu bir bonus!', tutHit: 'Onu kar tanesiyle vur', tutLife: 've +1 can kazan!',
+    tutTriple: 've aynı anda 3 kar tanesi at!', tutDuration: '8 saniye sürer',
+    hint1: 'Kar tanesi atmak için dokun', hint2: 'Kurdu vur — tavşanı kurtar!',
+    waveBonus: 'Dalga bonusu', lives: 'Canlar', retry: 'Bir şans daha!', wolvesFled: 'Kurtlar kaçtı',
+    tapWolf: 'Kurdu vur!', great: 'Harika!', rabbitSaved: 'Tavşan kurtarıldı!',
+    newFox: 'Yeni düşman: kurnaz tilki!', newThief: 'Dikkat: tilkiler taşların arkasına saklanıyor!',
+    foxTip1: 'Kurnaz tilki kaçar!', foxTip2: 'Art arda iki kar tanesi at!', thiefTip1: 'Hırsız tilki!', thiefTip2: 'Onu vur — tavşanı koru!', dodged: 'Kaçtı!',
+    shop: 'Mağaza', hats: 'Şapkalar', shots: 'Kar taneleri', select: 'Seç', selected: 'Seçili', back: 'Geri', carrots: 'Havuçlar', doubleAd: 'Havuçları ikiye katla (reklam izle)',
+    shopHint: 'Yeni bir şey için yeterli havucun var — mağazaya göz at!',
+    language: 'Dil'
+  },
+  es: {
+    title: '¡Salva al conejo!',
+    play: 'Jugar', best: 'Récord', pause: 'Pausa', resume: 'Continuar',
+    waveCleared: '¡Oleada {n} superada!', waveClearedShort: '¡Oleada superada!',
+    lifeAd: '+1 ♥ (ver anuncio)', next: 'Siguiente', gameOver: 'Fin del juego',
+    score: 'Puntos', saved: 'Salvados', newRecord: '¡Nuevo récord!',
+    continueAd: 'Continuar (ver anuncio)', again: 'Jugar otra vez', scoreSmall: 'puntos',
+    wave: 'Oleada {n}', savedRabbits: 'Conejos salvados', music: 'Música', sounds: 'Sonidos',
+    saveBunnies: '¡Salva a los conejitos!', wolvesTougher: 'Lobos más fuertes: {n} golpes', moreWolves: '¡Más lobos!',
+    bonus: 'Bonus +{n}', savedPop: '¡Salvado!', triplePop: '¡3 copos!',
+    tutTitle: '¡Es un bonus!', tutHit: '¡Golpéalo con un copo de nieve', tutLife: 'y gana +1 vida!',
+    tutTriple: 'y lanza 3 copos a la vez!', tutDuration: 'Dura 8 segundos',
+    hint1: 'Toca para lanzar copos de nieve', hint2: '¡Golpea al lobo y salva al conejo!',
+    waveBonus: 'Bonus de oleada', lives: 'Vidas', retry: '¡Otro intento!', wolvesFled: 'Los lobos huyeron',
+    tapWolf: '¡Dale al lobo!', great: '¡Genial!', rabbitSaved: '¡Conejo salvado!',
+    newFox: '¡Nuevo enemigo: el zorro astuto!', newThief: '¡Cuidado: hay zorros escondidos tras las rocas!',
+    foxTip1: '¡El zorro astuto esquiva!', foxTip2: '¡Lanza dos copos seguidos!', thiefTip1: '¡Zorro ladrón!', thiefTip2: '¡Dale y protege al conejo!', dodged: '¡Esquivó!',
+    shop: 'Tienda', hats: 'Gorros', shots: 'Copos', select: 'Elegir', selected: 'Elegido', back: 'Volver', carrots: 'Zanahorias', doubleAd: 'Duplicar zanahorias (ver anuncio)',
+    shopHint: '¡Ya tienes zanahorias para algo nuevo: visita la tienda!',
+    language: 'Idioma'
+  },
+  fr: {
+    title: 'Sauve le lapin' + NB + '!',
+    play: 'Jouer', best: 'Record', pause: 'Pause', resume: 'Reprendre',
+    waveCleared: 'Vague {n} terminée' + NB + '!', waveClearedShort: 'Vague terminée' + NB + '!',
+    lifeAd: '+1 ♥ (voir une pub)', next: 'Suivant', gameOver: 'Partie terminée',
+    score: 'Score', saved: 'Sauvés', newRecord: 'Nouveau record' + NB + '!',
+    continueAd: 'Continuer (voir une pub)', again: 'Rejouer', scoreSmall: 'score',
+    wave: 'Vague {n}', savedRabbits: 'Lapins sauvés', music: 'Musique', sounds: 'Sons',
+    saveBunnies: 'Sauve les lapins' + NB + '!', wolvesTougher: 'Loups plus coriaces' + NB + ': {n} coups', moreWolves: 'Encore plus de loups' + NB + '!',
+    bonus: 'Bonus +{n}', savedPop: 'Sauvé' + NB + '!', triplePop: '3 flocons' + NB + '!',
+    tutTitle: 'C’est un bonus' + NB + '!', tutHit: 'Touche-le avec un flocon', tutLife: 'et gagne +1 vie' + NB + '!',
+    tutTriple: 'et lance 3 flocons à la fois' + NB + '!', tutDuration: 'Dure 8 secondes',
+    hint1: 'Touche l’écran pour lancer des flocons', hint2: 'Touche le loup — sauve le lapin' + NB + '!',
+    waveBonus: 'Bonus de vague', lives: 'Vies', retry: 'Encore un essai' + NB + '!', wolvesFled: 'Les loups se sont enfuis',
+    tapWolf: 'Vise le loup' + NB + '!', great: 'Bravo' + NB + '!', rabbitSaved: 'Lapin sauvé' + NB + '!',
+    newFox: 'Nouvel ennemi' + NB + ': le renard rusé' + NB + '!', newThief: 'Attention' + NB + ': des renards se cachent derrière les rochers' + NB + '!',
+    foxTip1: 'Le renard rusé esquive' + NB + '!', foxTip2: 'Lance deux flocons d’affilée' + NB + '!', thiefTip1: 'Renard voleur' + NB + '!', thiefTip2: 'Touche-le — protège le lapin' + NB + '!', dodged: 'Esquivé' + NB + '!',
+    shop: 'Boutique', hats: 'Bonnets', shots: 'Flocons', select: 'Choisir', selected: 'Choisi', back: 'Retour', carrots: 'Carottes', doubleAd: 'Doubler les carottes (voir une pub)',
+    shopHint: 'Tu as assez de carottes pour une nouveauté — va voir la boutique' + NB + '!',
+    language: 'Langue'
+  },
+  de: {
+    title: 'Rette den Hasen!',
+    play: 'Spielen', best: 'Rekord', pause: 'Pause', resume: 'Weiter',
+    waveCleared: 'Welle {n} geschafft!', waveClearedShort: 'Welle geschafft!',
+    lifeAd: '+1 ♥ (Werbung ansehen)', next: 'Weiter', gameOver: 'Spiel vorbei',
+    score: 'Punkte', saved: 'Gerettet', newRecord: 'Neuer Rekord!',
+    continueAd: 'Weiterspielen (Werbung)', again: 'Nochmal', scoreSmall: 'Punkte',
+    wave: 'Welle {n}', savedRabbits: 'Gerettete Hasen', music: 'Musik', sounds: 'Geräusche',
+    saveBunnies: 'Rette die Häschen!', wolvesTougher: 'Stärkere Wölfe: {n} Treffer', moreWolves: 'Immer mehr Wölfe!',
+    bonus: 'Bonus +{n}', savedPop: 'Gerettet!', triplePop: '3 Flocken!',
+    tutTitle: 'Ein Bonus!', tutHit: 'Triff ihn mit einer Schneeflocke', tutLife: 'und erhalte +1 Leben!',
+    tutTriple: 'und wirf 3 Flocken auf einmal!', tutDuration: 'Hält 8 Sekunden',
+    hint1: 'Tippe, um Schneeflocken zu werfen', hint2: 'Triff den Wolf — rette den Hasen!',
+    waveBonus: 'Wellenbonus', lives: 'Leben', retry: 'Noch ein Versuch!', wolvesFled: 'Die Wölfe sind geflohen',
+    tapWolf: 'Triff den Wolf!', great: 'Super!', rabbitSaved: 'Hase gerettet!',
+    newFox: 'Neuer Gegner: der schlaue Fuchs!', newThief: 'Vorsicht: Füchse verstecken sich hinter Steinen!',
+    foxTip1: 'Der schlaue Fuchs weicht aus!', foxTip2: 'Wirf zwei Flocken hintereinander!', thiefTip1: 'Diebischer Fuchs!', thiefTip2: 'Triff ihn — schütze den Hasen!', dodged: 'Ausgewichen!',
+    shop: 'Shop', hats: 'Mützen', shots: 'Schneeflocken', select: 'Wählen', selected: 'Gewählt', back: 'Zurück', carrots: 'Karotten', doubleAd: 'Karotten verdoppeln (Werbung)',
+    shopHint: 'Du hast genug Karotten für etwas Neues — schau in den Shop!',
+    language: 'Sprache'
+  },
+  it: {
+    title: 'Salva il coniglio!',
+    play: 'Gioca', best: 'Record', pause: 'Pausa', resume: 'Riprendi',
+    waveCleared: 'Ondata {n} superata!', waveClearedShort: 'Ondata superata!',
+    lifeAd: '+1 ♥ (guarda la pubblicità)', next: 'Avanti', gameOver: 'Partita finita',
+    score: 'Punti', saved: 'Salvati', newRecord: 'Nuovo record!',
+    continueAd: 'Continua (guarda la pubblicità)', again: 'Gioca ancora', scoreSmall: 'punti',
+    wave: 'Ondata {n}', savedRabbits: 'Conigli salvati', music: 'Musica', sounds: 'Suoni',
+    saveBunnies: 'Salva i coniglietti!', wolvesTougher: 'Lupi più forti: {n} colpi', moreWolves: 'Sempre più lupi!',
+    bonus: 'Bonus +{n}', savedPop: 'Salvato!', triplePop: '3 fiocchi!',
+    tutTitle: 'È un bonus!', tutHit: 'Colpiscilo con un fiocco di neve', tutLife: 'e ottieni +1 vita!',
+    tutTriple: 'e lancia 3 fiocchi insieme!', tutDuration: 'Dura 8 secondi',
+    hint1: 'Tocca per lanciare fiocchi di neve', hint2: 'Colpisci il lupo — salva il coniglio!',
+    waveBonus: 'Bonus ondata', lives: 'Vite', retry: 'Un altro tentativo!', wolvesFled: 'I lupi sono scappati',
+    tapWolf: 'Colpisci il lupo!', great: 'Ottimo!', rabbitSaved: 'Coniglio salvato!',
+    newFox: 'Nuovo nemico: la volpe furba!', newThief: 'Attenzione: le volpi si nascondono dietro i sassi!',
+    foxTip1: 'La volpe furba schiva!', foxTip2: 'Lancia due fiocchi di fila!', thiefTip1: 'Volpe ladra!', thiefTip2: 'Colpiscila — proteggi il coniglio!', dodged: 'Schivato!',
+    shop: 'Negozio', hats: 'Cappelli', shots: 'Fiocchi', select: 'Scegli', selected: 'Scelto', back: 'Indietro', carrots: 'Carote', doubleAd: 'Raddoppia le carote (guarda la pubblicità)',
+    shopHint: 'Hai abbastanza carote per qualcosa di nuovo — visita il negozio!',
+    language: 'Lingua'
+  },
+  zh: {
+    title: '拯救小兔子！',
+    play: '开始游戏', best: '最高分', pause: '暂停', resume: '继续',
+    waveCleared: '第{n}波完成！', waveClearedShort: '本波完成！',
+    lifeAd: '+1 ♥（看广告）', next: '下一波', gameOver: '游戏结束',
+    score: '得分', saved: '已救', newRecord: '新纪录！',
+    continueAd: '继续（看广告）', again: '再玩一次', scoreSmall: '分',
+    wave: '第{n}波', savedRabbits: '救下的兔子', music: '音乐', sounds: '音效',
+    saveBunnies: '拯救小兔子！', wolvesTougher: '狼变强了：要击中{n}次', moreWolves: '狼越来越多！',
+    bonus: '奖励 +{n}', savedPop: '得救了！', triplePop: '3片雪花！',
+    tutTitle: '这是奖励！', tutHit: '用雪花击中它', tutLife: '就能获得+1条命！',
+    tutTriple: '就能一次扔出3片雪花！', tutDuration: '持续8秒',
+    hint1: '点击屏幕扔出雪花', hint2: '击中狼，拯救兔子！',
+    waveBonus: '本波奖励', lives: '生命', retry: '再试一次！', wolvesFled: '狼群逃跑了',
+    tapWolf: '击中狼！', great: '太棒了！', rabbitSaved: '兔子得救了！',
+    newFox: '新敌人：狡猾的狐狸！', newThief: '小心：狐狸躲在石头后面！',
+    foxTip1: '狡猾的狐狸会躲开！', foxTip2: '连续扔两片雪花！', thiefTip1: '小偷狐狸！', thiefTip2: '击中它，保护兔子！', dodged: '躲开了！',
+    shop: '商店', hats: '帽子', shots: '雪花', select: '选择', selected: '已选择', back: '返回', carrots: '胡萝卜', doubleAd: '胡萝卜翻倍（看广告）',
+    shopHint: '胡萝卜够买新东西了——去商店看看吧！',
+    language: '语言'
+  },
+  ja: {
+    title: 'うさぎを救え！',
+    play: 'プレイ', best: 'ハイスコア', pause: '一時停止', resume: 'つづける',
+    waveCleared: 'ウェーブ{n}クリア！', waveClearedShort: 'ウェーブクリア！',
+    lifeAd: '+1 ♥（広告を見る）', next: '次へ', gameOver: 'ゲームオーバー',
+    score: 'スコア', saved: '救出', newRecord: '新記録！',
+    continueAd: 'つづける（広告を見る）', again: 'もう一度', scoreSmall: 'スコア',
+    wave: 'ウェーブ{n}', savedRabbits: '救ったうさぎ', music: '音楽', sounds: '効果音',
+    saveBunnies: 'うさぎを救おう！', wolvesTougher: 'オオカミが強くなった：{n}回当てよう', moreWolves: 'オオカミが増えてきた！',
+    bonus: 'ボーナス +{n}', savedPop: '救出！', triplePop: '雪の結晶×3！',
+    tutTitle: 'ボーナスだ！', tutHit: '雪の結晶を当てると', tutLife: 'ライフが+1！',
+    tutTriple: '一度に3つ投げられる！', tutDuration: '効果は8秒間',
+    hint1: 'タップで雪の結晶を投げよう', hint2: 'オオカミに当てて、うさぎを救え！',
+    waveBonus: 'ウェーブボーナス', lives: 'ライフ', retry: 'もう一回！', wolvesFled: 'オオカミが逃げた',
+    tapWolf: 'オオカミをねらえ！', great: 'すごい！', rabbitSaved: 'うさぎを救った！',
+    newFox: '新しい敵：ずるいキツネ！', newThief: '気をつけて：岩の後ろにキツネがかくれている！',
+    foxTip1: 'ずるいキツネはよける！', foxTip2: '雪の結晶を2つ続けて投げよう！', thiefTip1: 'どろぼうキツネ！', thiefTip2: '当てて、うさぎを守れ！', dodged: 'よけられた！',
+    shop: 'ショップ', hats: 'ぼうし', shots: '雪の結晶', select: '選ぶ', selected: '使用中', back: 'もどる', carrots: 'ニンジン', doubleAd: 'ニンジン2倍（広告を見る）',
+    shopHint: 'ニンジンで新しいアイテムが買えるよ。ショップをのぞいてみよう！',
+    language: '言語'
+  },
+  ko: {
+    title: '토끼를 구해줘!',
+    play: '플레이', best: '최고 기록', pause: '일시정지', resume: '계속하기',
+    waveCleared: '{n}웨이브 클리어!', waveClearedShort: '웨이브 클리어!',
+    lifeAd: '+1 ♥ (광고 보기)', next: '다음', gameOver: '게임 오버',
+    score: '점수', saved: '구출', newRecord: '새 기록!',
+    continueAd: '계속하기 (광고 보기)', again: '다시 하기', scoreSmall: '점수',
+    wave: '{n}웨이브', savedRabbits: '구한 토끼', music: '음악', sounds: '효과음',
+    saveBunnies: '토끼들을 구해요!', wolvesTougher: '늑대가 강해졌어요: {n}번 맞히기', moreWolves: '늑대가 더 많아져요!',
+    bonus: '보너스 +{n}', savedPop: '구출!', triplePop: '눈송이 3개!',
+    tutTitle: '보너스예요!', tutHit: '눈송이로 맞히면', tutLife: '생명 +1!',
+    tutTriple: '한 번에 눈송이 3개를 던져요!', tutDuration: '8초 동안 지속',
+    hint1: '탭해서 눈송이를 던지세요', hint2: '늑대를 맞혀 토끼를 구하세요!',
+    waveBonus: '웨이브 보너스', lives: '생명', retry: '한 번 더!', wolvesFled: '늑대들이 도망갔어요',
+    tapWolf: '늑대를 맞혀요!', great: '잘했어요!', rabbitSaved: '토끼를 구했어요!',
+    newFox: '새로운 적: 꾀 많은 여우!', newThief: '조심하세요: 바위 뒤에 여우가 숨어 있어요!',
+    foxTip1: '꾀 많은 여우는 피해요!', foxTip2: '눈송이를 연속으로 두 개 던져요!', thiefTip1: '도둑 여우!', thiefTip2: '맞혀서 토끼를 지켜요!', dodged: '피했다!',
+    shop: '상점', hats: '모자', shots: '눈송이', select: '선택', selected: '선택됨', back: '뒤로', carrots: '당근', doubleAd: '당근 2배 (광고 보기)',
+    shopHint: '당근으로 새 아이템을 살 수 있어요 — 상점에 가 보세요!',
+    language: '언어'
+  },
+  hi: {
+    title: 'खरगोश को बचाओ!',
+    play: 'खेलो', best: 'रिकॉर्ड', pause: 'रुका हुआ', resume: 'जारी रखो',
+    waveCleared: 'लहर {n} पूरी!', waveClearedShort: 'लहर पूरी!',
+    lifeAd: '+1 ♥ (विज्ञापन देखो)', next: 'आगे', gameOver: 'खेल ख़त्म',
+    score: 'अंक', saved: 'बचाए', newRecord: 'नया रिकॉर्ड!',
+    continueAd: 'जारी रखो (विज्ञापन देखो)', again: 'फिर से खेलो', scoreSmall: 'अंक',
+    wave: 'लहर {n}', savedRabbits: 'बचाए गए खरगोश', music: 'संगीत', sounds: 'आवाज़ें',
+    saveBunnies: 'खरगोशों को बचाओ!', wolvesTougher: 'भेड़िये ताकतवर हुए: {n} वार', moreWolves: 'और भेड़िये आ रहे हैं!',
+    bonus: 'बोनस +{n}', savedPop: 'बच गया!', triplePop: '3 स्नोफ्लेक!',
+    tutTitle: 'यह बोनस है!', tutHit: 'इस पर स्नोफ्लेक मारो', tutLife: 'और +1 जान पाओ!',
+    tutTriple: 'और एक साथ 3 स्नोफ्लेक फेंको!', tutDuration: '8 सेकंड तक',
+    hint1: 'स्नोफ्लेक फेंकने के लिए टैप करो', hint2: 'भेड़िये को मारो — खरगोश को बचाओ!',
+    waveBonus: 'लहर बोनस', lives: 'जानें', retry: 'एक और मौका!', wolvesFled: 'भेड़िये भाग गए',
+    tapWolf: 'भेड़िये पर निशाना लगाओ!', great: 'शाबाश!', rabbitSaved: 'खरगोश बच गया!',
+    newFox: 'नया दुश्मन: चालाक लोमड़ी!', newThief: 'सावधान: पत्थरों के पीछे लोमड़ियाँ छिपी हैं!',
+    foxTip1: 'चालाक लोमड़ी बच निकलती है!', foxTip2: 'लगातार दो स्नोफ्लेक फेंको!', thiefTip1: 'चोर लोमड़ी!', thiefTip2: 'उसे मारो — खरगोश को बचाओ!', dodged: 'बच निकली!',
+    shop: 'दुकान', hats: 'टोपियाँ', shots: 'स्नोफ्लेक', select: 'चुनो', selected: 'चुना गया', back: 'वापस', carrots: 'गाजरें', doubleAd: 'गाजरें दोगुनी करो (विज्ञापन देखो)',
+    shopHint: 'नई चीज़ के लिए गाजरें काफ़ी हैं — दुकान देखो!',
+    language: 'भाषा'
+  }
+};
+let lang = 'en';
+let wolfTutDone = store.get('str_tut_wolf', '0') === '1';
+let foxTutDone = store.get('str_tut_fox', '0') === '1', thiefTutDone = store.get('str_tut_thief', '0') === '1';
+const firstTime = store.get('str_played', '0') !== '1';
+const T = (key, n) => {
+  const s = (I18N[lang] && I18N[lang][key]) || I18N.en[key] || key;
+  return n === undefined ? s : s.replace('{n}', n);
+};
+// код языка браузера/Poki → один из наших (иначе английский)
+function pickLang(code) {
+  const c = String(code || '').toLowerCase().slice(0, 2);
+  return I18N[c] ? c : null;
+}
+function applyLang(code) {
+  lang = I18N[code] ? code : 'en';
+  document.documentElement.lang = lang;
+  document.title = T('title');
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = T(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = T(el.dataset.i18nHtml); });
+  document.querySelectorAll('[data-i18n-aria]').forEach(el => { el.setAttribute('aria-label', T(el.dataset.i18nAria)); });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => { el.title = T(el.dataset.i18nTitle); });
+  const name = (LANGS.find(l => l[0] === lang) || LANGS[0])[1];
+  document.querySelectorAll('.langname').forEach(el => { el.textContent = name; });
+}
+
+/* ================= Утилиты ================= */
+const rand = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const dist = (ax, ay, bx, by) => Math.hypot(ax - bx, ay - by);
+const TAU = Math.PI * 2;
+const FONT = '"Trebuchet MS","Segoe UI",Roboto,system-ui,"PingFang SC","Hiragino Sans","Microsoft YaHei","Noto Sans CJK SC","Malgun Gothic","Apple SD Gothic Neo","Nirmala UI","Noto Sans Devanagari",sans-serif';
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function circ(c, x, y, r) { c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); }
+function ell(c, x, y, rx, ry, rot) { c.beginPath(); c.ellipse(x, y, rx, ry, rot || 0, 0, TAU); c.fill(); }
+function tri(c, x1, y1, x2, y2, x3, y3) { c.beginPath(); c.moveTo(x1, y1); c.lineTo(x2, y2); c.lineTo(x3, y3); c.closePath(); c.fill(); }
+function heart(c, x, y, s) {
+  c.beginPath(); c.moveTo(x, y + s * 0.35);
+  c.bezierCurveTo(x - s * 0.6, y - s * 0.1, x - s * 0.35, y - s * 0.6, x, y - s * 0.25);
+  c.bezierCurveTo(x + s * 0.35, y - s * 0.6, x + s * 0.6, y - s * 0.1, x, y + s * 0.35);
+  c.fill();
+}
+const $ = id => document.getElementById(id);
+// на низких экранах (например, 640×360) верхняя панель прячется, пока открыто окно, — иначе она закрывает заголовок
+const syncModal = () => document.body.classList.toggle('modal', [...document.querySelectorAll('.overlay')].some(o => !o.classList.contains('hidden')));
+const show = el => { el.classList.remove('hidden'); syncModal(); };
+const hide = el => { el.classList.add('hidden'); syncModal(); };
+
+/* ================= Состояние ================= */
+const cvs = $('game');
+let ctx = cvs.getContext('2d'); // let — для превью в магазине рисуем теми же функциями на другом холсте
+const hudEl = $('hud'), menuEl = $('menu'), pauseEl = $('pause'), overEl = $('over');
+let W = 0, H = 0, S = 1, DPR = 1, groundTop = 0, groundBot = 0, playerX = 0, playerY = 0, bg = null;
+
+const stones = [];
+const rabbits = [], wolves = [], flakes = [], particles = [], popups = [], powerups = [], snow = [];
+const player = { kind: 'p', y: 0, aim: -Math.PI / 2, throwT: 0, side: 1 };
+const pointer = { x: 0, y: 0, down: false };
+const game = {
+  state: 'menu', score: 0, best: parseInt(store.get('str_best', '0'), 10) || 0,
+  lives: 3, wave: 0, combo: 1, saved: 0, time: 0, cool: 0, triple: 0, shake: 0,
+  spawned: 0, waveTotal: 0, maxActive: 1, wolfHp: 1, speedMul: 1, spawnT: 0,
+  waveState: 'intro', introT: 0, clearT: 0, banner: null, hintT: 0, powerT: 12,
+  continues: 0, ending: false, overT: 0, tutorial: null, tutT: 0, wolfTut: null
+};
+
+const depth = y => 0.75 + 0.4 * (y - groundTop) / (groundBot - groundTop);
+
+/* ================= Размер экрана ================= */
+function resize() {
+  const vv = window.visualViewport, de = document.documentElement;
+  const nw = Math.round(window.innerWidth || de.clientWidth || (vv && vv.width) || 0);
+  const nh = Math.round(window.innerHeight || de.clientHeight || (vv && vv.height) || 0);
+  // во встроенных просмотрщиках окно может сначала иметь нулевой размер — ждём настоящего
+  if (nw < 50 || nh < 50) return;
+  if (nw === W && nh === H && bg) return;
+  const oW = W, oH = H, oS = S;
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = nw; H = nh;
+  cvs.width = Math.round(W * DPR); cvs.height = Math.round(H * DPR);
+  cvs.style.width = W + 'px'; cvs.style.height = H + 'px';
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  S = Math.max(0.3, Math.min(H / 720, W / 480));
+  groundTop = H * 0.47; groundBot = H * 0.74;
+  playerX = W / 2; playerY = H * 0.91;
+  buildBackground();
+  initSnow();
+  if (oW && oH) {
+    const kx = W / oW, ky = H / oH, ks = S / oS;
+    for (const r of rabbits) { r.x *= kx; r.y *= ky; r.tx *= kx; r.ty *= ky; r.speed *= ks; }
+    for (const w of wolves) { w.x *= kx; w.y *= ky; w.speed *= ks; }
+    for (const p of powerups) { p.bx *= kx; p.x *= kx; p.y *= ky; p.ty *= ky; }
+    flakes.length = 0;
+  } else { pointer.x = W / 2; pointer.y = H * 0.5; }
+}
+
+/* ================= Фон (рисуется один раз) ================= */
+function pine(c, x, y, h, col, snowCol) {
+  const w = h * 0.44;
+  c.fillStyle = '#3b2a22'; c.fillRect(x - w * 0.06, y - h * 0.13, w * 0.12, h * 0.13);
+  for (let i = 0; i < 3; i++) {
+    const ty = y - h * 0.1 - i * h * 0.27, tw = w * (1 - i * 0.25), th = h * 0.42;
+    c.fillStyle = col; tri(c, x, ty - th, x + tw / 2, ty, x - tw / 2, ty);
+    c.fillStyle = snowCol;
+    c.beginPath(); c.moveTo(x, ty - th); c.lineTo(x + tw * 0.22, ty - th * 0.55);
+    c.quadraticCurveTo(x + tw * 0.1, ty - th * 0.47, x, ty - th * 0.56);
+    c.quadraticCurveTo(x - tw * 0.1, ty - th * 0.47, x - tw * 0.22, ty - th * 0.55); c.closePath(); c.fill();
+    c.beginPath(); c.moveTo(x - tw / 2, ty);
+    c.quadraticCurveTo(x - tw * 0.25, ty - th * 0.12, x, ty - th * 0.04);
+    c.quadraticCurveTo(x + tw * 0.25, ty - th * 0.12, x + tw / 2, ty);
+    c.quadraticCurveTo(x, ty + th * 0.05, x - tw / 2, ty); c.fill();
+  }
+}
+function hills(c, baseY, amp, col, rnd) {
+  const p1 = rnd() * 6, p2 = rnd() * 6;
+  c.fillStyle = col; c.beginPath(); c.moveTo(0, groundTop + 20);
+  for (let x = 0; x <= W + 10; x += 10) {
+    c.lineTo(x, baseY - (Math.sin(x / W * 3 + p1) * 0.6 + Math.sin(x / W * 7 + p2) * 0.4 + 1) * amp * 0.5);
+  }
+  c.lineTo(W + 10, groundTop + 20); c.closePath(); c.fill();
+}
+function buildBackground() {
+  bg = document.createElement('canvas');
+  bg.width = Math.round(W * DPR); bg.height = Math.round(H * DPR);
+  const c = bg.getContext('2d'); c.setTransform(DPR, 0, 0, DPR, 0, 0);
+  const rnd = mulberry32(7);
+  let g = c.createLinearGradient(0, 0, 0, groundTop);
+  g.addColorStop(0, '#16244a'); g.addColorStop(0.55, '#35548a'); g.addColorStop(1, '#a9c1e0');
+  c.fillStyle = g; c.fillRect(0, 0, W, groundTop + 30);
+  c.fillStyle = '#ffffff';
+  for (let i = 0; i < 90; i++) { c.globalAlpha = 0.25 + rnd() * 0.75; circ(c, rnd() * W, rnd() * groundTop * 0.55, rnd() * 1.4 + 0.3); }
+  c.globalAlpha = 1;
+  const mx = W * 0.82, my = H * 0.13, mr = 34 * S;
+  g = c.createRadialGradient(mx, my, mr * 0.5, mx, my, mr * 4);
+  g.addColorStop(0, 'rgba(255,250,225,0.45)'); g.addColorStop(1, 'rgba(255,250,225,0)');
+  c.fillStyle = g; c.fillRect(mx - mr * 4, my - mr * 4, mr * 8, mr * 8);
+  c.fillStyle = '#fff8dc'; circ(c, mx, my, mr);
+  c.fillStyle = 'rgba(214,204,165,0.55)'; circ(c, mx - mr * 0.3, my - mr * 0.2, mr * 0.2); circ(c, mx + mr * 0.35, my + mr * 0.25, mr * 0.14);
+  hills(c, groundTop - 80 * S, 60 * S, '#7f99bf', rnd);
+  hills(c, groundTop - 35 * S, 40 * S, '#98b0d1', rnd);
+  for (let x = -20; x < W + 20; x += (14 + rnd() * 16) * S) pine(c, x, groundTop + 6 * S, (50 + rnd() * 50) * S, '#4a6690', '#c9d8ec');
+  for (let x = -30; x < W + 30; x += (30 + rnd() * 40) * S) pine(c, x, groundTop + 14 * S, (80 + rnd() * 70) * S, '#2e4a72', '#e3ecf7');
+  g = c.createLinearGradient(0, groundTop, 0, H);
+  g.addColorStop(0, '#dbe7f5'); g.addColorStop(0.5, '#eef4fb'); g.addColorStop(1, '#d3e1f1');
+  c.fillStyle = g; c.beginPath(); c.moveTo(0, groundTop + 10 * S);
+  for (let x = 0; x <= W + 20; x += 20) c.lineTo(x, groundTop + 10 * S + Math.sin(x * 0.02) * 4 * S);
+  c.lineTo(W + 20, H); c.lineTo(0, H); c.closePath(); c.fill();
+  for (let i = 0; i < 16; i++) {
+    const x = rnd() * W, y = groundTop + 14 * S + rnd() * (H - groundTop), rw = (60 + rnd() * 120) * S, rh = rw * 0.18;
+    c.fillStyle = 'rgba(160,188,222,0.2)'; ell(c, x, y + rh * 0.5, rw, rh);
+    c.fillStyle = 'rgba(255,255,255,0.65)'; ell(c, x, y, rw * 0.9, rh * 0.8);
+  }
+  c.fillStyle = 'rgba(160,188,222,0.3)'; ell(c, playerX, playerY + 8 * S, 96 * S, 20 * S);
+  c.fillStyle = '#f7fafd'; ell(c, playerX, playerY + 2 * S, 88 * S, 17 * S);
+  const big = 170 * S;
+  pine(c, W * 0.03, H * 1.03, big * 1.1, '#1f3a5f', '#eef4fb');
+  pine(c, W * 0.97, H * 1.03, big, '#1f3a5f', '#eef4fb');
+  if (W > 760) { pine(c, W * 0.12, H * 1.06, big * 0.75, '#284a72', '#eef4fb'); pine(c, W * 0.88, H * 1.06, big * 0.8, '#284a72', '#eef4fb'); }
+  g = c.createRadialGradient(W / 2, H * 0.55, Math.min(W, H) * 0.4, W / 2, H * 0.55, Math.max(W, H) * 0.8);
+  g.addColorStop(0, 'rgba(10,20,50,0)'); g.addColorStop(1, 'rgba(10,20,50,0.35)');
+  c.fillStyle = g; c.fillRect(0, 0, W, H);
+}
+
+/* ================= Падающий снег ================= */
+function initSnow() {
+  const n = Math.round(clamp(W * H / 9000, 40, 170));
+  snow.length = 0;
+  for (let i = 0; i < n; i++) snow.push({ x: Math.random() * W, y: Math.random() * H, r: rand(0.8, 2.8) * Math.max(S, 0.7), vy: rand(20, 55), ph: Math.random() * TAU });
+}
+function updateSnow(dt) {
+  for (const f of snow) {
+    f.y += f.vy * dt * (0.6 + f.r * 0.25); f.ph += dt; f.x += Math.sin(f.ph) * 12 * dt;
+    if (f.y > H + 5) { f.y = -5; f.x = Math.random() * W; }
+    if (f.x < -5) f.x = W + 5; else if (f.x > W + 5) f.x = -5;
+  }
+}
+function drawSnow() {
+  ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.beginPath();
+  for (const f of snow) { ctx.moveTo(f.x + f.r, f.y); ctx.arc(f.x, f.y, f.r, 0, TAU); }
+  ctx.fill();
+}
+
+/* ================= Персонажи ================= */
+function ear(c, x, y, a) {
+  c.save(); c.translate(x, y); c.rotate(a);
+  c.fillStyle = '#f6f9fd'; c.beginPath(); c.ellipse(0, -12, 5.5, 15, 0, 0, TAU); c.fill(); c.stroke();
+  c.fillStyle = '#ffc2d1'; ell(c, 0, -12, 2.6, 10.5);
+  c.restore();
+}
+function drawRabbit(x, y, sc, dir, t, moving, shadow) {
+  const c = ctx, hop = moving ? Math.abs(Math.sin(t * 13)) * 13 : 0;
+  const wig = moving ? Math.sin(t * 13) * 0.12 : Math.sin(t * 2) * 0.06;
+  c.save(); c.translate(x, y);
+  if (shadow) { c.fillStyle = 'rgba(40,60,100,0.22)'; ell(c, 0, 0, Math.max(8, 24 - hop * 0.6) * sc, 6 * sc); }
+  c.scale(sc * dir, sc); c.translate(0, -hop);
+  c.lineWidth = 2; c.strokeStyle = '#b7c4d6';
+  c.fillStyle = '#e6ecf4'; ell(c, -9, -5, 14, 6);
+  c.fillStyle = '#ffffff'; circ(c, -21, -23, 7.5);
+  c.fillStyle = '#f6f9fd'; c.beginPath(); c.ellipse(-2, -20, 21, 15.5, -0.15, 0, TAU); c.fill(); c.stroke();
+  ear(c, 10, -42, -0.4 + wig); ear(c, 17, -43, 0.08 - wig);
+  c.fillStyle = '#f6f9fd'; c.beginPath(); c.arc(17, -34, 12, 0, TAU); c.fill(); c.stroke();
+  c.fillStyle = 'rgba(255,150,170,0.45)'; circ(c, 21, -29, 3.5);
+  c.fillStyle = '#1f2433'; circ(c, 21, -37, 2.6);
+  c.fillStyle = '#ffffff'; circ(c, 21.8, -37.8, 0.9);
+  c.fillStyle = '#ff8fa8'; circ(c, 28.5, -33, 2.2);
+  c.fillStyle = '#f6f9fd'; c.beginPath(); c.ellipse(13, -6, 6, 4, 0, 0, TAU); c.fill(); c.stroke();
+  c.restore();
+}
+function drawRabbitEnt(r) {
+  const sc = depth(r.y) * S * 0.9;
+  drawRabbit(r.x, r.y, sc, r.dir, r.t, true, true);
+  if (r.scared > 0) outlined('!', r.x, r.y - 70 * sc, 30 * S, '#ff4d5e');
+  else if (r.state === 'saved') { ctx.fillStyle = '#ff5c7c'; heart(ctx, r.x, r.y - (66 + Math.sin(r.t * 8) * 3) * sc, 16 * sc); }
+}
+function leg(c, x, y, a, col) {
+  c.save(); c.translate(x, y); c.rotate(a);
+  c.strokeStyle = col; c.lineWidth = 8; c.beginPath(); c.moveTo(0, 0); c.lineTo(0, 24); c.stroke();
+  c.restore();
+}
+function drawWolf(w) {
+  if (w.type && w.type !== 'wolf') { drawFox(w); return; }
+  const c = ctx, sc = depth(w.y) * S, t = w.t;
+  const frozen = w.stun > 0 && w.state !== 'carry', running = !frozen;
+  c.save(); c.translate(w.x, w.y);
+  c.fillStyle = 'rgba(40,60,100,0.25)'; ell(c, 0, 0, 52 * sc, 9 * sc);
+  c.scale(sc * w.dir, sc);
+  const fur = w.flash > 0 ? '#ffffff' : frozen ? '#a9d2f5' : '#6f7a8b';
+  const dark = frozen ? '#78acd9' : '#4a5363';
+  const light = frozen ? '#e3f3ff' : '#c3cad4';
+  const ph = t * 15, sw = running ? Math.sin(ph) * 0.65 : 0, bob = running ? -Math.abs(Math.sin(ph)) * 3 : 0;
+  c.lineCap = 'round';
+  leg(c, -26, -28, sw, dark); leg(c, 20, -28, -sw, dark);
+  c.save(); c.translate(-36, -44 + bob);
+  c.rotate(w.state === 'chase' ? -0.25 + Math.sin(t * 9) * 0.15 : 0.7);
+  c.fillStyle = fur; c.beginPath(); c.moveTo(2, -7); c.quadraticCurveTo(-20, -16, -40, -6); c.quadraticCurveTo(-22, 10, 2, 7); c.closePath(); c.fill();
+  c.fillStyle = light; ell(c, -35, -5, 7, 4.5, 0.2);
+  c.restore();
+  c.fillStyle = fur; ell(c, 0, -40 + bob, 40, 19);
+  c.fillStyle = dark; ell(c, -4, -54 + bob, 26, 6);
+  c.fillStyle = light; ell(c, 8, -29 + bob, 24, 7);
+  leg(c, -14, -28, -sw, fur); leg(c, 30, -28, sw, fur);
+  c.save(); c.translate(38, -54 + bob);
+  c.fillStyle = fur; ell(c, -8, 8, 14, 15, 0.4);
+  c.fillStyle = dark; tri(c, -9, -9, -5, -31, 3, -10); tri(c, 1, -11, 8, -30, 12, -8);
+  c.fillStyle = '#e9a3b0'; tri(c, -6, -11, -4.5, -25, 0, -11);
+  c.fillStyle = fur; circ(c, 0, 0, 15);
+  c.beginPath(); c.moveTo(4, -8); c.quadraticCurveTo(24, -8, 33, -1); c.lineTo(31, 5); c.quadraticCurveTo(16, 9, 4, 8); c.closePath(); c.fill();
+  c.fillStyle = light; c.beginPath(); c.moveTo(6, 4); c.quadraticCurveTo(18, 10, 30, 5); c.quadraticCurveTo(18, 14, 6, 10); c.closePath(); c.fill();
+  c.fillStyle = '#22262d'; circ(c, 32, -1, 3.6);
+  if (w.state === 'chase' && !frozen) { c.fillStyle = '#ffffff'; tri(c, 20, 5, 22, 10, 24, 5); tri(c, 26, 4, 27.5, 8, 29, 4); }
+  if (frozen) {
+    c.strokeStyle = '#1f2a3a'; c.lineWidth = 2; c.beginPath(); c.moveTo(4, -5); c.lineTo(11, -3); c.stroke();
+  } else if (w.state === 'chase') {
+    c.fillStyle = '#ffd23f'; circ(c, 8, -4, 3.4); c.fillStyle = '#111'; circ(c, 9, -4, 1.7);
+    c.strokeStyle = '#2a2f38'; c.lineWidth = 2.4; c.beginPath(); c.moveTo(2, -10); c.lineTo(13, -6); c.stroke();
+  } else {
+    c.fillStyle = '#ffffff'; circ(c, 8, -4, 4); c.fillStyle = '#111'; circ(c, 7, -3.5, 1.8);
+    c.strokeStyle = '#2a2f38'; c.lineWidth = 2; c.beginPath(); c.moveTo(3, -11); c.lineTo(12, -12); c.stroke();
+    if (w.state === 'flee') { c.fillStyle = '#8fd0ff'; c.beginPath(); c.moveTo(-6, -22); c.quadraticCurveTo(-1, -14, -6, -12); c.quadraticCurveTo(-11, -14, -6, -22); c.fill(); }
+  }
+  if (w.state === 'carry') drawRabbit(26, 24, 0.45, 1, 0, false, false);
+  c.restore();
+  if (frozen) {
+    c.fillStyle = 'rgba(255,255,255,0.95)';
+    [[-20, -62], [10, -66], [40, -80], [-38, -30]].forEach(([sx, sy], i) => {
+      const s = 3 + Math.sin(game.time * 20 + i) * 1.5; tri(c, sx, sy - s * 2, sx + s, sy, sx - s, sy); tri(c, sx, sy + s * 2, sx + s, sy, sx - s, sy);
+    });
+  }
+  c.restore();
+  if (w.state === 'chase' && w.maxHp > 1) {
+    const gap = 13 * S, x0 = w.x - (w.maxHp - 1) * gap / 2, y0 = w.y - 100 * sc;
+    c.lineWidth = 2 * S; c.strokeStyle = '#ffffff';
+    for (let i = 0; i < w.maxHp; i++) {
+      c.fillStyle = i < w.hp ? '#ff4d5e' : 'rgba(255,255,255,0.45)';
+      c.beginPath(); c.arc(x0 + i * gap, y0, 5 * S, 0, TAU); c.fill(); c.stroke();
+    }
+  }
+}
+function drawFox(w) {
+  // лиса: рыжая, хвост пушистый; у воровки чёрная «маска»
+  const c = ctx, sc = depth(w.y) * S * 0.85, t = w.t;
+  const frozen = w.stun > 0 && w.state !== 'carry', running = !frozen && w.state !== 'emerge';
+  c.save(); c.translate(w.x, w.y);
+  c.fillStyle = 'rgba(40,60,100,0.25)'; ell(c, 0, 0, 44 * sc, 8 * sc);
+  c.translate(0, foxHop(w));
+  if (w.state === 'emerge') c.translate(0, 18 * sc * Math.max(0, w.emergeT) / 0.4);
+  c.scale(sc * w.dir, sc);
+  const fur = w.flash > 0 ? '#ffffff' : frozen ? '#a9d2f5' : '#e8742a';
+  const dark = frozen ? '#78acd9' : '#2b2220', light = '#fff6ec';
+  const ph = t * 17, sw = running ? Math.sin(ph) * 0.7 : 0, bob = running ? -Math.abs(Math.sin(ph)) * 3 : 0;
+  c.lineCap = 'round';
+  leg(c, -22, -26, sw, dark); leg(c, 16, -26, -sw, dark);
+  c.save(); c.translate(-30, -40 + bob);
+  c.rotate(w.state === 'chase' || w.state === 'emerge' ? -0.35 + Math.sin(t * 9) * 0.12 : 0.6);
+  c.fillStyle = fur; c.beginPath(); c.moveTo(2, -8); c.quadraticCurveTo(-30, -28, -58, -8); c.quadraticCurveTo(-30, 18, 2, 8); c.closePath(); c.fill();
+  c.fillStyle = light; ell(c, -52, -8, 9, 7, 0.2);
+  c.restore();
+  c.fillStyle = fur; ell(c, 0, -38 + bob, 34, 15);
+  c.fillStyle = light; ell(c, 9, -28 + bob, 20, 6);
+  leg(c, -12, -26, -sw, dark); leg(c, 26, -26, sw, dark);
+  c.save(); c.translate(32, -50 + bob);
+  c.fillStyle = fur; ell(c, -6, 8, 11, 12, 0.4);
+  tri(c, -9, -8, -5, -30, 2, -9); tri(c, 1, -10, 9, -29, 12, -7);
+  c.fillStyle = dark; tri(c, -6.5, -20, -5, -30, -3, -21); tri(c, 6, -20, 9, -29, 10.5, -19);
+  c.fillStyle = fur; circ(c, 0, 0, 12);
+  c.beginPath(); c.moveTo(4, -6); c.quadraticCurveTo(22, -4, 31, 1); c.lineTo(29, 5); c.quadraticCurveTo(14, 8, 4, 7); c.closePath(); c.fill();
+  c.fillStyle = light; c.beginPath(); c.moveTo(-5, 3); c.quadraticCurveTo(10, 12, 29, 5); c.quadraticCurveTo(12, 14, -3, 10); c.closePath(); c.fill();
+  c.fillStyle = '#2b2220'; circ(c, 31, 1.5, 3);
+  if (w.type === 'thief') { c.fillStyle = '#2b2220'; ell(c, 5, -4, 10, 4.6, 0.1); }
+  if (frozen) { c.strokeStyle = '#1f2a3a'; c.lineWidth = 2; c.beginPath(); c.moveTo(3, -4); c.lineTo(10, -3); c.stroke(); }
+  else if (w.state === 'flee' || w.state === 'carry') { c.fillStyle = '#ffffff'; circ(c, 7, -4, 3.2); c.fillStyle = '#111'; circ(c, 6.5, -3.5, 1.6); }
+  else {
+    c.fillStyle = w.type === 'thief' ? '#ffe36b' : '#2b2220'; circ(c, 7, -4, 2.5);
+    c.strokeStyle = '#2b2220'; c.lineWidth = 2; c.beginPath(); c.moveTo(1, -9); c.lineTo(11, -7); c.stroke();
+  }
+  if (w.state === 'carry') drawRabbit(22, 22, 0.45, 1, 0, false, false);
+  c.restore();
+  c.restore();
+}
+function drawStone(st) {
+  const c = ctx, sx = st.fx * W, sy = st.fy * H, d = depth(sy) * S, rw = 36 * d, rh = 28 * d;
+  c.fillStyle = 'rgba(40,60,100,0.25)'; ell(c, sx, sy, rw * 1.15, rh * 0.28);
+  // кончик хвоста иногда выглядывает — подсказка, что за камнем лиса
+  if (st.fox && (st.peek % 3.4) < 0.8) {
+    c.save(); c.translate(sx + rw * 0.8, sy - rh * 0.5); c.rotate(-0.7 + Math.sin(st.peek * 14) * 0.25);
+    c.fillStyle = '#e8742a'; ell(c, 10 * d, 0, 13 * d, 6.5 * d); c.fillStyle = '#fff6ec'; ell(c, 21 * d, 0, 5.5 * d, 5 * d);
+    c.restore();
+  }
+  c.fillStyle = '#7d8aa0'; c.beginPath(); c.moveTo(sx - rw, sy);
+  c.quadraticCurveTo(sx - rw * 1.05, sy - rh * 1.2, sx - rw * 0.2, sy - rh * 1.35);
+  c.quadraticCurveTo(sx + rw * 0.95, sy - rh * 1.3, sx + rw, sy); c.closePath(); c.fill();
+  c.fillStyle = '#97a4b9'; c.beginPath(); c.moveTo(sx - rw * 0.8, sy - rh * 0.3);
+  c.quadraticCurveTo(sx - rw * 0.85, sy - rh * 1.1, sx - rw * 0.2, sy - rh * 1.2);
+  c.quadraticCurveTo(sx + rw * 0.2, sy - rh * 0.8, sx - rw * 0.8, sy - rh * 0.3); c.fill();
+  c.fillStyle = '#f4f8fd'; c.beginPath(); c.moveTo(sx - rw * 0.75, sy - rh * 1.0);
+  c.quadraticCurveTo(sx - rw * 0.3, sy - rh * 1.45, sx + rw * 0.35, sy - rh * 1.28);
+  c.quadraticCurveTo(sx + rw * 0.75, sy - rh * 1.1, sx + rw * 0.8, sy - rh * 0.8);
+  c.quadraticCurveTo(sx + rw * 0.1, sy - rh * 1.0, sx - rw * 0.75, sy - rh * 1.0); c.fill();
+}
+function drawFlake(x, y, r, rot, alpha, edge, main, glow) {
+  const c = ctx;
+  c.save(); c.translate(x, y); c.rotate(rot); c.globalAlpha = alpha == null ? 1 : alpha;
+  c.fillStyle = glow || 'rgba(190,225,255,0.35)'; circ(c, 0, 0, r * 1.25);
+  c.beginPath();
+  for (let i = 0; i < 6; i++) {
+    const a = i * Math.PI / 3, cx = Math.cos(a), sy = Math.sin(a), bx = cx * r * 0.55, by = sy * r * 0.55;
+    c.moveTo(0, 0); c.lineTo(cx * r, sy * r);
+    c.moveTo(bx, by); c.lineTo(bx + Math.cos(a + 0.6) * r * 0.32, by + Math.sin(a + 0.6) * r * 0.32);
+    c.moveTo(bx, by); c.lineTo(bx + Math.cos(a - 0.6) * r * 0.32, by + Math.sin(a - 0.6) * r * 0.32);
+  }
+  c.lineCap = 'round';
+  c.strokeStyle = edge || '#5b9be0'; c.lineWidth = Math.max(2.5, r * 0.3); c.stroke();
+  c.strokeStyle = main || '#ffffff'; c.lineWidth = Math.max(1.4, r * 0.16); c.stroke();
+  c.restore();
+}
+function drawPlayer() {
+  // мальчик нарисован со спины: он смотрит в лес, туда, куда бросает снежинки
+  const c = ctx, sc = S * 1.15, a = player.aim;
+  const look = Math.cos(a) * 3; // голова чуть поворачивается за прицелом
+  c.save(); c.translate(playerX, playerY);
+  c.fillStyle = 'rgba(40,60,100,0.22)'; ell(c, 0, 0, 30 * sc, 7 * sc);
+  c.scale(sc, sc);
+  // ноги и ботинки (видны пятки)
+  c.fillStyle = '#34495e'; c.fillRect(-13, -28, 11, 24); c.fillRect(2, -28, 11, 24);
+  c.fillStyle = '#4a2f22'; ell(c, -7.5, -4, 8, 4.5); ell(c, 7.5, -4, 8, 4.5);
+  c.lineCap = 'round';
+  // свободная рука опущена
+  const sd = player.side;
+  c.strokeStyle = '#2669b0'; c.lineWidth = 9; c.beginPath(); c.moveTo(-14 * sd, -54); c.lineTo(-22 * sd, -34); c.stroke();
+  c.fillStyle = '#e23b4e'; circ(c, -23 * sd, -32, 5.5);
+  // куртка со спины: шов посередине, без пуговиц
+  c.fillStyle = '#2f7fd1'; c.beginPath(); c.moveTo(-20, -24); c.quadraticCurveTo(-23, -62, 0, -64); c.quadraticCurveTo(23, -62, 20, -24); c.closePath(); c.fill();
+  c.fillStyle = 'rgba(20,60,120,0.25)'; c.fillRect(-1, -60, 2, 31);
+  c.fillStyle = '#e9f1fb'; c.fillRect(-20, -29, 40, 6);
+  // капюшон, сложенный на спине
+  c.fillStyle = '#2a72bf'; c.beginPath(); c.moveTo(-12, -62); c.quadraticCurveTo(0, -46, 12, -62); c.closePath(); c.fill();
+  // шарф: узел сзади и два хвостика
+  c.fillStyle = '#e23b4e'; c.fillRect(-13, -66, 26, 7);
+  c.save(); c.translate(-3, -61); c.rotate(0.12 + Math.sin(game.time * 3) * 0.05);
+  c.fillRect(-3.5, 0, 7, 17); c.fillStyle = '#ffffff'; c.fillRect(-3.5, 13, 7, 2); c.restore();
+  c.fillStyle = '#e23b4e';
+  c.save(); c.translate(2, -61); c.rotate(-0.08 + Math.sin(game.time * 3 + 1) * 0.05);
+  c.fillRect(-3.5, 0, 7, 13); c.fillStyle = '#ffffff'; c.fillRect(-3.5, 9, 7, 2); c.restore();
+  // голова сзади: уши и волосы, лица не видно
+  c.fillStyle = '#ffcfae'; ell(c, -13.5 + look, -76, 3.2, 4.5); ell(c, 13.5 + look, -76, 3.2, 4.5);
+  c.fillStyle = '#7a4a2e'; circ(c, look, -77, 14);
+  // шапка со спины
+  drawHat(c, skins.hat, look);
+  // рука со стороны цели бросает снежинку
+  const len = player.throwT > 0 ? 30 : 24, sx = 14 * sd, sy = -54, hx = sx + Math.cos(a) * len, hy = sy + Math.sin(a) * len;
+  c.strokeStyle = '#2f7fd1'; c.lineWidth = 9; c.beginPath(); c.moveTo(sx, sy); c.lineTo(hx, hy); c.stroke();
+  c.fillStyle = '#e23b4e'; circ(c, hx, hy, 5.5);
+  if (game.cool <= 0 && game.state === 'play') drawShot(hx + Math.cos(a) * 6, hy + Math.sin(a) * 6, 7, game.time * 2);
+  c.restore();
+}
+function drawPower(p) {
+  if (p.life < 2 && Math.floor(p.life * 8) % 2 === 0) return;
+  const c = ctx, r = 24 * S;
+  c.save(); c.translate(p.x, p.y + p.bob);
+  const g = c.createRadialGradient(0, 0, r * 0.6, 0, 0, r * 2);
+  g.addColorStop(0, p.type === 'heart' ? 'rgba(255,120,150,0.5)' : 'rgba(120,200,255,0.55)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+  c.fillStyle = g; circ(c, 0, 0, r * 2);
+  c.fillStyle = 'rgba(255,255,255,0.95)'; circ(c, 0, 0, r);
+  c.strokeStyle = p.type === 'heart' ? '#ff5a6e' : '#4aa3ff'; c.lineWidth = 3 * S; c.stroke();
+  if (p.type === 'heart') { c.fillStyle = '#ff4d6d'; heart(c, 0, 3 * S, r * 1.15); }
+  else { drawFlake(-r * 0.42, r * 0.2, r * 0.3, p.t); drawFlake(r * 0.42, r * 0.2, r * 0.3, -p.t); drawFlake(0, -r * 0.35, r * 0.3, p.t * 1.3); }
+  c.restore();
+}
+
+/* ================= Текст на холсте ================= */
+function fitSize(text, max, maxW) { ctx.font = `900 ${max}px ${FONT}`; const w = ctx.measureText(text).width; return w > maxW ? max * maxW / w : max; }
+function outlined(text, x, y, size, fill, stroke) {
+  ctx.font = `900 ${size}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+  ctx.lineWidth = Math.max(3, size * 0.2); ctx.strokeStyle = stroke || '#1e3a5f'; ctx.strokeText(text, x, y);
+  ctx.fillStyle = fill || '#ffffff'; ctx.fillText(text, x, y);
+}
+
+/* ================= Эффекты ================= */
+function burst(x, y, color, n) {
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * TAU, v = rand(60, 220) * S;
+    particles.push({ type: 'dot', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: 300 * S, life: rand(0.35, 0.7), max: 0.7, r: rand(2, 5) * S, color });
+  }
+}
+function popup(x, y, text, color, size) {
+  ctx.font = `900 ${size}px ${FONT}`; const half = ctx.measureText(text).width / 2 + 8; // не вылезать за край экрана
+  popups.push({ x: clamp(x, half, Math.max(half, W - half)), y, text, color, size, t: 0, life: 1.1 });
+}
+function addScore(n) { game.score += n; updateHud(); }
+
+/* ================= Волны ================= */
+function nextWave() {
+  game.wave++;
+  const n = game.wave;
+  game.waveTotal = 3 + n * 2;
+  game.maxActive = Math.min(1 + Math.floor(n / 2), 4);
+  game.wolfHp = Math.min(1 + Math.floor((n - 1) / 2), 4);
+  game.speedMul = Math.min(1 + (n - 1) * 0.07, 1.7);
+  Sound.setWave(n);
+  game.spawned = 0; game.spawnT = 0.6; game.waveState = 'intro'; game.introT = 1.8; game.foxThisWave = 0;
+  if (n >= 9) setupStones();
+  const sub = n === 1 ? T('saveBunnies') : n === 4 ? T('newFox') : n === 9 ? T('newThief') : (game.wolfHp > 1 && game.wolfHp !== Math.min(1 + Math.floor((n - 2) / 2), 4))
+    ? T('wolvesTougher', game.wolfHp) : T('moreWolves');
+  game.banner = { text: T('wave', n), sub, t: 0, life: 2.2 };
+  updateHud();
+}
+function waveClear() {
+  const bonus = 50 * game.wave;
+  game.waveState = 'clear'; game.clearT = 1.6; addScore(bonus);
+  game.banner = { text: T('waveClearedShort'), sub: T('bonus', bonus), t: 0, life: 2 };
+  Sound.power();
+}
+function spawnPair() {
+  const side = Math.random() < 0.5 ? -1 : 1;
+  const y = rand(groundTop + 18 * S, groundBot);
+  const rx = side < 0 ? -30 * S : W + 30 * S;
+  const r = { kind: 'r', x: rx, y, tx: 0, ty: 0, speed: 115 * S * rand(0.95, 1.05) * Math.min(game.speedMul, 1.4), state: 'flee', t: Math.random() * 10, dir: -side, retarget: 0, side: 1, wolf: null };
+  const w = { kind: 'w', type: 'wolf', x: rx + side * rand(230, 300) * S, y: clamp(y + rand(-30, 30) * S, groundTop + 18 * S, groundBot), speed: 140 * S * game.speedMul, hp: game.wolfHp, maxHp: game.wolfHp, stun: 0, kb: 0, flash: 0, state: 'chase', t: 0, dir: -side, target: r };
+  // хитрая лиса — с 4-й волны: гарантированно одна за волну, дальше по шансу
+  if (game.wave >= 4 && ((game.foxThisWave === 0 && game.spawned >= 1) || Math.random() < Math.min(0.2 + (game.wave - 4) * 0.05, 0.4))) {
+    Object.assign(w, { type: 'fox', hp: 1, maxHp: 1, speed: w.speed * 1.05, dodge: 1, dodgeCd: 0, jumpT: 0 });
+    r.value = 150; game.foxThisWave++;
+  }
+  r.wolf = w;
+  r.tx = side < 0 ? rand(W * 0.35, W * 0.75) : rand(W * 0.25, W * 0.65); r.ty = rand(groundTop + 18 * S, groundBot); r.retarget = 2.2;
+  rabbits.push(r); wolves.push(w);
+}
+function spawnPower() {
+  const type = (game.lives < 3 && Math.random() < 0.5) ? 'heart' : 'triple';
+  const x = rand(W * 0.2, W * 0.8);
+  powerups.push({ type, x, bx: x, y: -30 * S, ty: rand(groundTop - 130 * S, groundTop - 40 * S), t: 0, life: 10, bob: 0 });
+}
+
+/* ================= Логика ================= */
+function moveToward(e, tx, ty, step) {
+  const dx = tx - e.x, dy = ty - e.y, d = Math.hypot(dx, dy);
+  if (d < 1e-3) return;
+  const k = Math.min(1, step / d); e.x += dx * k; e.y += dy * k;
+  if (Math.abs(dx) > 2) e.dir = dx > 0 ? 1 : -1;
+}
+function pickTarget(r) {
+  const w = r.wolf, mx = 50 * S; let best = null, bs = -1e9;
+  for (let k = 0; k < 7; k++) {
+    const cx = rand(mx, W - mx), cy = rand(groundTop + 18 * S, groundBot);
+    const tcx = cx - r.x, tcy = cy - r.y, twx = w.x - r.x, twy = w.y - r.y;
+    const dot = (tcx * twx + tcy * twy) / (Math.hypot(tcx, tcy) * Math.hypot(twx, twy) + 1e-6);
+    let s = dist(cx, cy, w.x, w.y) - dist(cx, cy, r.x, r.y) * 0.35 + Math.random() * 60 * S;
+    if (dot > 0.3) s -= dot * 300 * S;
+    if (s > bs) { bs = s; best = { x: cx, y: cy }; }
+  }
+  r.tx = best.x; r.ty = best.y; r.retarget = rand(0.9, 1.8);
+}
+function caught(r, w) {
+  w.state = 'carry'; w.dir = w.x < W / 2 ? -1 : 1; w.speed *= 1.25;
+  burst(r.x, r.y - 20 * S, '#ffffff', 14);
+  popup(r.x, r.y - 60 * S, '−♥', '#ff4d6d', 32 * S);
+  game.lives--; game.combo = 1; game.shake = 0.35; Sound.caught(); updateHud();
+  if (game.lives <= 0 && !game.ending) { game.ending = true; game.overT = 1.3; pointer.down = false; }
+}
+function collect(r) {
+  const pts = (r.value || 100) * game.combo; game.saved++; r.state = 'home';
+  popup(playerX, playerY - 135 * S, '+' + pts + (game.combo > 1 ? '  ×' + game.combo : ''), '#ffd23f', 30 * S);
+  game.combo = Math.min(game.combo + 1, 5);
+  for (let i = 0; i < 7; i++) particles.push({ type: 'heart', x: r.x, y: r.y - 20 * S, vx: rand(-70, 70) * S, vy: rand(-170, -80) * S, g: 120 * S, life: 1, max: 1, r: rand(10, 15) * S, color: '#ff6b8a' });
+  const cr = r.value === 150 ? 2 : 1; game.carrotsRun += cr; addCarrots(cr);
+  flyCarrots(r.x, r.y - 30 * S, cr);
+  Sound.save(); addScore(pts);
+  const sp = $('hudSavedPill'); sp.classList.remove('bump'); void sp.offsetWidth; sp.classList.add('bump');
+}
+function wolfDefeated(w) {
+  w.state = 'flee'; w.dir = w.x < W / 2 ? -1 : 1; w.speed *= 1.5; w.stun = 0.35;
+  const r = w.target;
+  if (r && r.state === 'flee') { r.state = 'saved'; r.side = r.x < playerX ? -1 : 1; popup(r.x, r.y - 75 * S, T('savedPop'), '#ffffff', 26 * S); }
+  if (w.type === 'thief') { addScore(25); popup(w.x, w.y - 70 * S, '+50', '#ffd23f', 24 * S); }
+  Sound.flee(); addScore(25);
+}
+function hitWolf(w, f) {
+  w.hp--; w.flash = 0.1; w.stun = 0.5; w.kb = (f.vx >= 0 ? 1 : -1) * 260 * S;
+  burst(f.x, f.y, '#ffffff', 10); burst(f.x, f.y, '#bfe3ff', 6);
+  Sound.hit(); addScore(10); game.hintT = Math.min(game.hintT, 0.6);
+  if (w.hp <= 0) wolfDefeated(w);
+  if (!wolfTutDone) { wolfTutDone = true; store.set('str_tut_wolf', '1'); }
+  const tut = game.wolfTut;
+  if (tut && (tut.kind === 'wolf' || tut.wolf === w)) {
+    if (tut.kind === 'fox') { foxTutDone = true; store.set('str_tut_fox', '1'); }
+    if (tut.kind === 'thief') { thiefTutDone = true; store.set('str_tut_thief', '1'); }
+    game.wolfTut = null; game.banner = { text: T('great'), sub: w.hp <= 0 ? T('rabbitSaved') : '', t: 0, life: 1.8 };
+  }
+}
+/* ---- Лисы ---- */
+const FOX_JUMP = 0.45;
+const foxHop = w => w.jumpT > 0 ? -Math.sin((1 - w.jumpT / FOX_JUMP) * Math.PI) * 40 * S : 0;
+function foxDodge(w) {
+  w.dodge = 0; w.jumpT = FOX_JUMP; w.jy0 = w.y;
+  const dir = w.y > (groundTop + groundBot) / 2 ? -1 : 1;
+  w.jy1 = clamp(w.y + dir * rand(60, 90) * S, groundTop + 18 * S, groundBot);
+  popup(w.x, w.y - 85 * S, T('dodged'), '#ffb37a', 22 * S); Sound.throw();
+}
+// камни с 9-й волны: за некоторыми прячется лиса-воровка
+function setupStones() {
+  if (!stones.length) [[0.18, 0.79], [0.34, 0.835], [0.66, 0.835], [0.82, 0.79]].forEach(([fx, fy]) => stones.push({ kind: 's', fx, fy, y: 0, fox: false, peek: Math.random() * 3 }));
+  let n = 0;
+  for (const st of stones) { st.fox = n < 2 && Math.random() < 0.35; if (st.fox) n++; }
+}
+function emergeThief(st, r) {
+  st.fox = false;
+  const sx = st.fx * W, sy = st.fy * H, d = r.x < sx ? -1 : 1;
+  const w = { kind: 'w', type: 'thief', x: sx + d * 10 * S, y: sy - 4 * S, speed: 380 * S, hp: 1, maxHp: 1, stun: 0, kb: 0, flash: 0, state: 'emerge', emergeT: 0.4, t: 0, dir: d, target: r, jumpT: 0, dodge: 0 };
+  wolves.push(w); r.hunted = true; r.scared = 0.45;
+  burst(sx, sy - 20 * S, '#ffffff', 10);
+  if (!thiefTutDone && !game.wolfTut) game.wolfTut = { wolf: w, kind: 'thief' };
+}
+function takePower(p) {
+  burst(p.x, p.y + p.bob, p.type === 'heart' ? '#ff8aa0' : '#9fd4ff', 18);
+  if (p.type === 'heart') { game.lives = Math.min(game.lives + 1, 5); popup(p.x, p.y, '+♥', '#ff4d6d', 32 * S); }
+  else { game.triple = 8; popup(p.x, p.y, T('triplePop'), '#9fd4ff', 26 * S); }
+  Sound.power(); updateHud();
+}
+/* ---- Обучение при первом появлении бонуса ---- */
+function updateTutorial(dt) {
+  const p = game.tutorial;
+  p.t += dt; p.bob = Math.sin(p.t * 3) * 5 * S; game.tutT += dt;
+  for (let i = flakes.length - 1; i >= 0; i--) {
+    const f = flakes[i];
+    f.x += f.vx * dt; f.y += f.vy * dt; f.rot += 9 * dt; f.life -= dt;
+    if (f.life <= 0 || f.x < -40 || f.x > W + 40 || f.y < -40 || f.y > H + 40) { flakes.splice(i, 1); continue; }
+    if (dist(f.x, f.y, p.x, p.y + p.bob) < 30 * S + f.r) {
+      flakes.splice(i, 1);
+      const j = powerups.indexOf(p); if (j >= 0) powerups.splice(j, 1);
+      store.set('str_tut_' + p.type, '1');
+      game.tutorial = null; takePower(p);
+      break;
+    }
+  }
+  updateFx(dt);
+}
+function drawTutorialDim() {
+  const p = game.tutorial, cx = p.x, cy = p.y + p.bob, r = (46 + Math.sin(game.time * 4) * 4) * S;
+  ctx.save();
+  ctx.fillStyle = `rgba(8,16,40,${0.62 * Math.min(1, game.tutT / 0.3)})`;
+  ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.arc(cx, cy, r, 0, TAU); ctx.fill('evenodd');
+  ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 3.5 * S; ctx.setLineDash([10 * S, 7 * S]); ctx.lineDashOffset = -game.time * 30;
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, TAU); ctx.stroke();
+  ctx.restore();
+}
+function drawTutorialText() {
+  const p = game.tutorial, cy = p.y + p.bob;
+  const bounce = Math.abs(Math.sin(game.time * 5)) * 10 * S, ay = cy + 58 * S + bounce;
+  ctx.fillStyle = '#ffd23f';
+  tri(ctx, p.x, ay, p.x - 14 * S, ay + 20 * S, p.x + 14 * S, ay + 20 * S);
+  ctx.fillRect(p.x - 5 * S, ay + 19 * S, 10 * S, 18 * S);
+  const l1 = T('tutTitle'), l2 = T('tutHit'), l3 = T(p.type === 'heart' ? 'tutLife' : 'tutTriple');
+  const tx = W / 2, ty = ay + 75 * S;
+  const sz = Math.min(fitSize(l2, 26 * S, W * 0.9), fitSize(l3, 26 * S, W * 0.9));
+  outlined(l1, tx, ty, fitSize(l1, sz * 1.3, W * 0.9), '#ffd23f');
+  outlined(l2, tx, ty + sz * 1.5, sz);
+  outlined(l3, tx, ty + sz * 2.8, sz);
+  if (p.type !== 'heart') outlined(T('tutDuration'), tx, ty + sz * 4, fitSize(T('tutDuration'), sz * 0.8, W * 0.9), '#bfe3ff');
+}
+function rrPath(c, x, y, w, h, r) {
+  c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r);
+  c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
+}
+function drawHand(x, y, s) {
+  const c = ctx;
+  c.save(); c.translate(x, y); c.scale(s, s); c.rotate(-0.5);
+  c.beginPath(); rrPath(c, -6, -36, 12, 38, 6); rrPath(c, -15, -8, 31, 32, 10); c.ellipse(-15, 6, 5, 9, -0.5, 0, TAU);
+  c.lineJoin = 'round'; c.strokeStyle = '#1e3a5f'; c.lineWidth = 6; c.stroke();
+  c.fillStyle = '#ffffff'; c.fill();
+  c.strokeStyle = 'rgba(30,58,95,0.35)'; c.lineWidth = 2;
+  c.beginPath(); c.moveTo(-2, 4); c.lineTo(-2, 14); c.moveTo(5, 4); c.lineTo(5, 14); c.stroke();
+  c.restore();
+}
+function drawWolfTut() {
+  const w = game.wolfTut.wolf, small = w.type !== 'wolf', sc = depth(w.y) * S * (small ? 0.85 : 1);
+  const cx = w.x + 5 * sc * w.dir, cy = w.y - (small ? 40 : 45) * sc + foxHop(w);
+  const k = (game.time * 1.4) % 1;
+  ctx.strokeStyle = `rgba(255,210,63,${1 - k})`; ctx.lineWidth = 4 * S;
+  ctx.beginPath(); ctx.arc(cx, cy, (45 + k * 35) * sc, 0, TAU); ctx.stroke();
+  const tap = Math.abs(Math.sin(game.time * 4));
+  if (tap < 0.15) { ctx.fillStyle = 'rgba(255,255,255,0.5)'; circ(ctx, cx + 4 * S, cy + 6 * S, 12 * S); }
+  drawHand(cx + 20 * S, cy + 36 * S + tap * 12 * S, S * 1.1);
+  const tut = game.wolfTut;
+  const lines = tut.kind === 'fox' ? [T('foxTip1'), T('foxTip2')] : tut.kind === 'thief' ? [T('thiefTip1'), T('thiefTip2')] : [T('tapWolf')];
+  const sz = Math.min(...lines.map(l => fitSize(l, 34 * S, W * 0.9)));
+  const y0 = tut.kind === 'thief' ? groundTop - 40 * S : playerY - 130 * S - (lines.length - 1) * sz * 1.25;
+  lines.forEach((l, i) => outlined(l, W / 2, y0 + i * sz * 1.25, i ? sz * 0.85 : sz, i ? '#ffffff' : '#ffd23f'));
+}
+function aimUpdate() {
+  const sc = S * 1.15;
+  player.side = pointer.x < playerX ? -1 : 1; // бросает той рукой, с чьей стороны цель
+  player.aim = Math.atan2(pointer.y - (playerY - 54 * sc), pointer.x - (playerX + 14 * player.side * sc));
+}
+function fire() {
+  const sc = S * 1.15, a0 = player.aim;
+  const hx = playerX + (14 * player.side + Math.cos(a0) * 26) * sc, hy = playerY + (-54 + Math.sin(a0) * 26) * sc, v = 820 * S;
+  const spread = game.triple > 0 ? [-0.16, 0, 0.16] : [0];
+  for (const da of spread) { const a = a0 + da; flakes.push({ x: hx, y: hy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, rot: Math.random() * 6, life: 1.6, r: 13 * S }); }
+  game.cool = 0.24; player.throwT = 0.14; Sound.throw();
+}
+
+function update(dt) {
+  game.time += dt;
+  if (game.cool > 0) game.cool -= dt;
+  if (game.triple > 0) game.triple -= dt;
+  if (game.shake > 0) game.shake -= dt;
+  if (game.hintT > 0) game.hintT -= dt;
+  if (player.throwT > 0) player.throwT -= dt;
+  if (game.banner) { game.banner.t += dt; if (game.banner.t > game.banner.life) game.banner = null; }
+  aimUpdate();
+  if (pointer.down && game.cool <= 0 && !game.ending) fire();
+  if (game.tutorial) { updateTutorial(dt); return; } // обучение: всё замерло, кроме снежинок
+  // обучение «Нажми на волка»: первый волк в 1-й волне, один раз
+  if (!game.wolfTut && !wolfTutDone && game.wave === 1 && !game.ending) {
+    const w = wolves.find(w => w.state === 'chase' && w.x > 60 * S && w.x < W - 60 * S);
+    if (w) game.wolfTut = { wolf: w, kind: 'wolf' };
+  }
+  if (!game.wolfTut && !foxTutDone && !game.ending) {
+    const f = wolves.find(w => w.type === 'fox' && w.state === 'chase' && w.x > 60 * S && w.x < W - 60 * S);
+    if (f) game.wolfTut = { wolf: f, kind: 'fox' };
+  }
+  if (game.wolfTut && game.wolfTut.wolf.state !== 'chase' && game.wolfTut.wolf.state !== 'emerge') game.wolfTut = null;
+  const worldDt = game.wolfTut ? dt * 0.3 : dt; // пока идёт обучение — замедление
+
+  if (!game.ending) {
+    if (game.waveState === 'intro') { game.introT -= dt; if (game.introT <= 0) game.waveState = 'run'; }
+    else if (game.waveState === 'run') {
+      game.spawnT -= dt;
+      let active = 0; for (const r of rabbits) if (r.state === 'flee') active++;
+      if (game.spawned < game.waveTotal && active < game.maxActive && game.spawnT <= 0) {
+        spawnPair(); game.spawned++; game.spawnT = rand(1.0, 2.4) / Math.min(game.speedMul, 1.4);
+      }
+      if (game.spawned >= game.waveTotal && rabbits.length === 0 && !wolves.some(w => w.state === 'chase')) waveClear();
+      if (!game.wolfTut) { game.powerT -= dt; if (game.powerT <= 0) { spawnPower(); game.powerT = rand(11, 17); } }
+    } else if (game.waveState === 'clear') { game.clearT -= dt; if (game.clearT <= 0) { showBreak(); return; } }
+  } else { game.overT -= dt; if (game.overT <= 0) { gameOver(); return; } }
+
+  { const dt = worldDt; // зайцы и волки двигаются в замедлении во время обучения
+  for (let i = rabbits.length - 1; i >= 0; i--) {
+    const r = rabbits[i]; r.t += dt;
+    if (r.state === 'flee') {
+      const w = r.wolf;
+      r.retarget -= dt;
+      if (dist(r.x, r.y, r.tx, r.ty) < 12 * S || r.retarget <= 0) pickTarget(r);
+      const dW = dist(r.x, r.y, w.x, w.y);
+      moveToward(r, r.tx, r.ty, r.speed * (dW < 200 * S ? 1.12 : 1) * dt);
+      if (w.state === 'chase' && w.stun <= 0 && dW < 34 * S * depth(r.y) && !(game.wolfTut && game.wolfTut.wolf === w)) { caught(r, w); rabbits.splice(i, 1); }
+    } else if (r.state === 'saved') {
+      if (r.scared > 0) { r.scared -= dt; continue; }
+      if (game.wolfTut && game.wolfTut.kind === 'thief' && game.wolfTut.wolf.target === r) continue;
+      const hx = playerX + r.side * 46 * S, hy = playerY - 2 * S;
+      moveToward(r, hx, hy, 270 * S * dt);
+      if (dist(r.x, r.y, hx, hy) < 14 * S) { collect(r); rabbits.splice(i, 1); }
+    }
+  }
+  // волки
+  for (let i = wolves.length - 1; i >= 0; i--) {
+    const w = wolves[i];
+    if (w.flash > 0) w.flash -= dt;
+    if (w.stun > 0) { w.stun -= dt; w.x += w.kb * dt; w.kb -= w.kb * Math.min(1, 7 * dt); continue; }
+    w.t += dt;
+    if (w.state === 'emerge') { w.emergeT -= dt; if (w.emergeT <= 0) w.state = 'chase'; continue; }
+    if (w.state === 'chase' && w.type === 'thief') {
+      const r = w.target;
+      if (!r || r.state !== 'saved') { w.state = 'flee'; w.dir = w.x < W / 2 ? -1 : 1; continue; }
+      moveToward(w, r.x, r.y, w.speed * dt);
+      if (dist(w.x, w.y, r.x, r.y) < 28 * S && !(game.wolfTut && game.wolfTut.wolf === w)) {
+        const k = rabbits.indexOf(r); if (k >= 0) rabbits.splice(k, 1);
+        r.state = 'stolen'; caught(r, w);
+      }
+      continue;
+    }
+    if (w.state === 'chase' && w.type === 'fox') {
+      if (w.jumpT > 0) {
+        w.jumpT -= dt; w.y = w.jy0 + (w.jy1 - w.jy0) * (1 - Math.max(0, w.jumpT) / FOX_JUMP);
+        const r = w.target; if (r) w.x += Math.sign(r.x - w.x) * w.speed * 0.6 * dt;
+        if (w.jumpT <= 0) w.dodgeCd = 2.2;
+        continue;
+      }
+      if (w.dodge === 0 && w.dodgeCd > 0) { w.dodgeCd -= dt; if (w.dodgeCd <= 0) w.dodge = 1; }
+    }
+    if (w.state === 'chase') {
+      const r = w.target;
+      if (!r || r.state !== 'flee') { w.state = 'flee'; w.dir = w.x < W / 2 ? -1 : 1; continue; }
+      moveToward(w, r.x, r.y, w.speed * dt);
+    } else {
+      w.x += w.dir * w.speed * dt;
+      if (w.x < -180 * S || w.x > W + 180 * S) wolves.splice(i, 1);
+    }
+  }
+  for (const st of stones) {
+    st.peek += dt;
+    if (!st.fox || game.ending) continue;
+    const sx = st.fx * W, sy = st.fy * H;
+    const r = rabbits.find(r => r.state === 'saved' && !r.hunted && dist(r.x, r.y, sx, sy) < 150 * S);
+    if (r) emergeThief(st, r);
+  }
+  }
+  // снежинки
+  outer: for (let i = flakes.length - 1; i >= 0; i--) {
+    const f = flakes[i];
+    f.x += f.vx * dt; f.y += f.vy * dt; f.rot += 9 * dt; f.life -= dt;
+    if (f.life <= 0 || f.x < -40 || f.x > W + 40 || f.y < -40 || f.y > H + 40) { flakes.splice(i, 1); continue; }
+    if (Math.random() < 0.5) particles.push({ type: 'dot', x: f.x, y: f.y, vx: 0, vy: 0, g: 0, life: 0.3, max: 0.3, r: f.r * 0.3, color: 'rgba(200,230,255,0.9)' });
+    for (const w of wolves) {
+      if ((w.state !== 'chase' && w.state !== 'emerge') || f.ignore === w) continue;
+      const small = w.type !== 'wolf', sc = depth(w.y) * S * (small ? 0.85 : 1);
+      const cx = w.x + 5 * sc * w.dir, cy = w.y - (small ? 40 : 45) * sc + foxHop(w);
+      const dx = (f.x - cx) / (60 * sc + f.r), dy = (f.y - cy) / (38 * sc + f.r);
+      if (dx * dx + dy * dy < 1) {
+        if (w.type === 'fox' && w.dodge > 0 && w.jumpT <= 0) { foxDodge(w); f.ignore = w; continue; } // увернулась — снежинка летит дальше
+        hitWolf(w, f); flakes.splice(i, 1); continue outer;
+      }
+    }
+    for (let j = powerups.length - 1; j >= 0; j--) {
+      const p = powerups[j];
+      if (dist(f.x, f.y, p.x, p.y + p.bob) < 26 * S + f.r) { takePower(p); powerups.splice(j, 1); flakes.splice(i, 1); continue outer; }
+    }
+  }
+  // бонусы
+  for (let i = powerups.length - 1; i >= 0; i--) {
+    const p = powerups[i]; p.t += dt;
+    if (p.y < p.ty) p.y += 90 * S * dt;
+    else {
+      p.life -= dt;
+      // бонус этого типа появился впервые — показываем обучение
+      if (!p.seen) { p.seen = true; if (store.get('str_tut_' + p.type, '0') !== '1') { game.tutorial = p; game.tutT = 0; pointer.down = false; } }
+    }
+    p.x = p.bx + Math.sin(p.t * 1.3) * 30 * S; p.bob = Math.sin(p.t * 3) * 5 * S;
+    if (p.life <= 0) powerups.splice(i, 1);
+  }
+  updateFx(dt);
+}
+function updateFx(dt) {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    if (p.type === 'fly') { p.t += dt; if (p.t >= p.dur) { particles.splice(i, 1); carrotArrived(); } continue; }
+    p.life -= dt;
+    if (p.life <= 0) { particles.splice(i, 1); continue; }
+    p.vy += p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt;
+  }
+  for (let i = popups.length - 1; i >= 0; i--) { const p = popups[i]; p.t += dt; p.y -= 45 * S * dt; if (p.t >= p.life) popups.splice(i, 1); }
+}
+
+/* ================= Отрисовка ================= */
+const demoRabbit = { kind: 'demo', y: 0 };
+function render() {
+  ctx.save();
+  if (game.shake > 0) { const m = game.shake * 14 * S; ctx.translate((Math.random() - 0.5) * m, (Math.random() - 0.5) * m); }
+  ctx.drawImage(bg, 0, 0, W, H);
+  for (const p of powerups) drawPower(p);
+  for (const r of rabbits) {
+    if (r.state !== 'flee') continue;
+    const w = r.wolf, d = dist(r.x, r.y, w.x, w.y), lim = 230 * S;
+    if (d < lim) {
+      const k = 1 - d / lim, sc = depth(r.y) * S;
+      ctx.strokeStyle = `rgba(255,60,80,${0.25 + k * 0.6})`; ctx.lineWidth = 3 * S;
+      ctx.beginPath(); ctx.ellipse(r.x, r.y, (30 + Math.sin(game.time * 12) * 4 * k) * sc, 9 * sc, 0, 0, TAU); ctx.stroke();
+    }
+  }
+  player.y = playerY; demoRabbit.y = playerY - 1;
+  const ents = rabbits.concat(wolves); ents.push(player);
+  for (const st of stones) { st.y = st.fy * H; ents.push(st); }
+  if (game.state === 'menu') ents.push(demoRabbit);
+  ents.sort((a, b) => a.y - b.y);
+  for (const e of ents) {
+    if (e.kind === 'r') drawRabbitEnt(e);
+    else if (e.kind === 'w') drawWolf(e);
+    else if (e.kind === 'p') drawPlayer();
+    else if (e.kind === 's') drawStone(e);
+    else drawRabbit(playerX + 72 * S, playerY - 1, S * 1.2, -1, game.time, false, true);
+  }
+  if (game.tutorial) drawTutorialDim();
+  for (const f of flakes) drawShot(f.x, f.y, f.r, f.rot);
+  for (const p of particles) {
+    ctx.globalAlpha = clamp(p.life / p.max, 0, 1); ctx.fillStyle = p.color;
+    if (p.type === 'fly') { if (p.t < 0) continue; const k = p.t / p.dur, e = k * k * (3 - 2 * k); ctx.globalAlpha = 1;
+      drawCarrot(ctx, p.x0 + (p.x1 - p.x0) * e, p.y0 + (p.y1 - p.y0) * e - Math.sin(Math.PI * k) * 70 * S, p.r * (1 - 0.35 * k)); continue; }
+    if (p.type === 'heart') heart(ctx, p.x, p.y, p.r); else if (p.type === 'carrot') drawCarrot(ctx, p.x, p.y, p.r); else circ(ctx, p.x, p.y, p.r);
+  }
+  ctx.globalAlpha = 1;
+  for (const w of wolves) {
+    if (w.state !== 'chase' || (w.x > -10 && w.x < W + 10)) continue;
+    const left = w.x < 0, ix = left ? 24 * S : W - 24 * S, iy = w.y - 40 * depth(w.y) * S, pulse = 1 + Math.sin(game.time * 10) * 0.12, d = left ? -1 : 1;
+    ctx.save(); ctx.translate(ix, iy); ctx.scale(pulse, pulse);
+    ctx.fillStyle = '#ff4d5e'; circ(ctx, 0, 0, 16 * S); tri(ctx, d * 25 * S, 0, d * 13 * S, -9 * S, d * 13 * S, 9 * S);
+    ctx.fillStyle = '#ffffff'; ctx.font = `900 ${22 * S}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('!', 0, 1 * S);
+    ctx.restore();
+  }
+  if (game.wolfTut && game.state === 'play') drawWolfTut();
+  for (const p of popups) { ctx.globalAlpha = 1 - Math.pow(p.t / p.life, 2); outlined(p.text, p.x, p.y, p.size, p.color); }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+  drawSnow();
+  if (game.tutorial && (game.state === 'play' || game.state === 'pause')) drawTutorialText();
+  if (game.state === 'play' || game.state === 'pause') {
+    if (game.triple > 0) {
+      const y = playerY - 140 * S;
+      drawFlake(playerX - 26 * S, y, 11 * S, game.time * 3);
+      outlined('×3', playerX + 10 * S, y, 24 * S, '#bfe3ff');
+      ctx.fillStyle = 'rgba(30,58,95,0.5)'; ctx.fillRect(playerX - 36 * S, y + 18 * S, 72 * S, 6 * S);
+      ctx.fillStyle = '#7cc4ff'; ctx.fillRect(playerX - 36 * S, y + 18 * S, 72 * S * clamp(game.triple / 8, 0, 1), 6 * S);
+    }
+    if (game.hintT > 0) {
+      ctx.globalAlpha = Math.min(1, game.hintT);
+      const l1 = T('hint1'), l2 = T('hint2');
+      const sz = Math.min(fitSize(l1, 24 * S, W * 0.9), fitSize(l2, 24 * S, W * 0.9));
+      outlined(l1, W / 2, H * 0.4, sz); outlined(l2, W / 2, H * 0.4 + sz * 1.35, sz, '#ffd23f');
+      ctx.globalAlpha = 1;
+    }
+    if (game.banner) {
+      const b = game.banner, a = Math.min(1, b.t / 0.25, (b.life - b.t) / 0.4), pop = 1 + Math.max(0, 0.25 - b.t) * 1.6;
+      ctx.globalAlpha = clamp(a, 0, 1);
+      const sz = fitSize(b.text, 56 * S, W * 0.86) * pop;
+      outlined(b.text, W / 2, H * 0.24, sz);
+      if (b.sub) outlined(b.sub, W / 2, H * 0.24 + sz * 0.95, fitSize(b.sub, 24 * S, W * 0.86), '#ffd23f');
+      ctx.globalAlpha = 1;
+    }
+  }
+}
+
+/* ================= HUD и экраны ================= */
+const ICON_ON = '<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z" fill="#1e3a5f"/><path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="#1e3a5f" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
+const ICON_OFF = '<svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z" fill="#1e3a5f"/><path d="M16 9l5 6M21 9l-5 6" stroke="#e23b4e" stroke-width="2.2" stroke-linecap="round"/></svg>';
+const MUSIC_ON = '<svg viewBox="0 0 24 24"><path d="M9 17V6l10-2v11" stroke="#1e3a5f" stroke-width="2" fill="none" stroke-linejoin="round"/><circle cx="6.5" cy="17" r="2.8" fill="#1e3a5f"/><circle cx="16.5" cy="15" r="2.8" fill="#1e3a5f"/></svg>';
+const MUSIC_OFF = '<svg viewBox="0 0 24 24"><path d="M9 17V6l10-2v11" stroke="#1e3a5f" stroke-width="2" fill="none" stroke-linejoin="round" opacity=".45"/><circle cx="6.5" cy="17" r="2.8" fill="#1e3a5f" opacity=".45"/><circle cx="16.5" cy="15" r="2.8" fill="#1e3a5f" opacity=".45"/><path d="M4 4l16 16" stroke="#e23b4e" stroke-width="2.4" stroke-linecap="round"/></svg>';
+function updateMuteIcon() {
+  $('btnMute').innerHTML = Sound.muted ? ICON_OFF : ICON_ON;
+  $('btnMusic').innerHTML = Sound.musicOn ? MUSIC_ON : MUSIC_OFF;
+}
+function toggleMute() { Sound.ensure(); Sound.toggle(); updateMuteIcon(); }
+function toggleMusic() { Sound.ensure(); Sound.toggleMusic(); updateMuteIcon(); }
+function updateHud() {
+  $('hudScore').textContent = game.score;
+  $('hudWave').textContent = T('wave', game.wave);
+  $('hudSaved').textContent = game.saved;
+  let h = ''; const total = Math.max(3, game.lives);
+  for (let i = 0; i < total; i++) h += i < game.lives ? '<span>♥</span>' : '<span class="lost">♥</span>';
+  $('hudLives').innerHTML = h;
+}
+function startGame() {
+  rabbits.length = 0; wolves.length = 0; stones.length = 0; flakes.length = 0; particles.length = 0; popups.length = 0; powerups.length = 0;
+  Object.assign(game, { score: 0, lives: 3, wave: 0, combo: 1, saved: 0, cool: 0, triple: 0, shake: 0, banner: null, hintT: 0, powerT: rand(12, 16), continues: 0, ending: false, overT: 0, tutorial: null, wolfTut: null, carrotsRun: 0, bonusCarrots: 0, doubled: false });
+  nextWave();
+  hide(menuEl); hide(overEl); hide(pauseEl); hide(betweenEl); $('hudCarrots').textContent = carrots; hudEl.classList.remove('menu-mode');
+  game.state = 'play'; updateHud(); Poki.start(); Sound.duck(1);
+  store.set('str_played', '1');
+}
+/* ---- Перерыв между волнами: +1 жизнь за рекламу, обычная реклама после чётных волн ---- */
+const betweenEl = $('between');
+function showBreak() {
+  game.state = 'break'; pointer.down = false; game.banner = null; Poki.stop();
+  $('brTitle').textContent = T('waveCleared', game.wave);
+  $('brSub').innerHTML =
+    `<div><span>${T('waveBonus')}</span><b>+${50 * game.wave}</b></div>` +
+    `<div><span>${T('savedRabbits')}</span><b>${game.saved}</b></div>` +
+    `<div><span>${T('carrots')}</span><b>+${game.carrotsRun}</b></div>` +
+    `<div><span>${T('lives')}</span><b class="hearts">${'♥'.repeat(game.lives)}</b></div>`;
+  const life = $('btnLife'); life.disabled = false; life.classList.toggle('hidden', game.lives >= 5 || !Poki.canReward);
+  // подсказка «загляни в магазин»: когда морковок впервые хватает на покупку (до 3 раз, пока магазин не открыт)
+  const hintN = parseInt(store.get('str_tut_shop_n', '0'), 10) || 0;
+  const hint = store.get('str_tut_shop', '0') !== '1' && hintN < 3 && carrots >= cheapestUnowned();
+  if (hint) store.set('str_tut_shop_n', String(hintN + 1));
+  $('brShopHint').classList.toggle('hidden', !hint);
+  $('btnBrShop').parentElement.classList.toggle('hinting', hint);
+  updateCarrots();
+  show(betweenEl);
+}
+function proceedWave() { hide(betweenEl); nextWave(); game.state = 'play'; Poki.start(); }
+function pauseGame() { if (game.state !== 'play') return; game.state = 'pause'; pointer.down = false; Poki.stop(); Sound.duck(0.3); show(pauseEl); }
+function resumeGame() { if (game.state !== 'pause') return; hide(pauseEl); game.state = 'play'; Poki.start(); Sound.duck(1); }
+function gameOver() {
+  game.state = 'over'; game.ending = false; pointer.down = false; Poki.stop(); Sound.over(); Sound.duck(0.4);
+  const isNew = game.score > game.best;
+  if (isNew) { game.best = game.score; store.set('str_best', String(game.best)); }
+  $('ovScore').textContent = game.score; $('ovSaved').textContent = game.saved; $('ovBest').textContent = game.best;
+  $('menuBest').textContent = game.best;
+  $('ovNew').classList.toggle('hidden', !isNew);
+  $('btnContinue').classList.toggle('hidden', !Poki.canReward); // предлагаем продолжить после каждого проигрыша
+  $('ovCarrots').textContent = game.carrotsRun + game.bonusCarrots;
+  $('btnDouble').disabled = false; $('btnDouble').classList.toggle('hidden', game.doubled || game.carrotsRun === 0 || !Poki.canReward);
+  show(overEl);
+}
+
+/* ================= Морковки и скины ================= */
+const SKINS = {
+  hat: [{ id: 'red', price: 0 }, { id: 'blue', price: 10 }, { id: 'green', price: 25 }, { id: 'bunny', price: 60 }, { id: 'crown', price: 120 }],
+  shot: [{ id: 'flake', price: 0 }, { id: 'star', price: 15 }, { id: 'heart', price: 40 }, { id: 'crystal', price: 80 }, { id: 'gold', price: 150 }]
+};
+let carrots = parseInt(store.get('str_carrots', '0'), 10) || 0;
+let skins = { owned: ['red', 'flake'], hat: 'red', shot: 'flake' };
+try { const sv = JSON.parse(store.get('str_skins', 'null')); if (sv && Array.isArray(sv.owned)) skins = sv; } catch (e) {}
+function saveSkins() { store.set('str_skins', JSON.stringify(skins)); store.set('str_carrots', String(carrots)); }
+function updateCarrots(all) { document.querySelectorAll('.carrotCount').forEach(el => { el.textContent = carrots; }); if (all) $('hudCarrots').textContent = carrots; }
+function addCarrots(n) { carrots += n; saveSkins(); updateCarrots(); }
+// морковка летит от зайца к счётчику на верхней панели
+function flyCarrots(x, y, n) {
+  const b = $('hudCarrotPill').getBoundingClientRect();
+  for (let i = 0; i < n; i++) particles.push({ type: 'fly', x0: x, y0: y, x1: b.left + 18, y1: b.top + b.height / 2, t: -i * 0.15, dur: 0.7, r: 15 * S, life: 1, max: 1, color: '' });
+}
+function carrotArrived() {
+  $('hudCarrots').textContent = carrots;
+  const el = $('hudCarrotPill'); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump');
+}
+
+function drawCarrot(c, x, y, s) {
+  c.save(); c.translate(x, y); c.rotate(0.6);
+  c.fillStyle = '#2fa35a'; ell(c, -3 * s / 14, -14 * s / 14, 3 * s / 14, 7 * s / 14, -0.4); ell(c, 3 * s / 14, -14 * s / 14, 3 * s / 14, 7 * s / 14, 0.4);
+  c.fillStyle = '#ff8a2a'; c.beginPath(); c.moveTo(0, s); c.lineTo(-s * 0.42, -s * 0.55); c.quadraticCurveTo(0, -s * 0.85, s * 0.42, -s * 0.55); c.closePath(); c.fill();
+  c.restore();
+}
+function beaniePath(c, lx) {
+  c.beginPath(); c.moveTo(-14.5 + lx, -82); c.quadraticCurveTo(-12 + lx, -102, lx, -102); c.quadraticCurveTo(12 + lx, -102, 14.5 + lx, -82); c.closePath();
+}
+function drawHat(c, id, lx) {
+  if (id === 'crown') {
+    c.fillStyle = '#ffcf3a'; c.beginPath(); c.moveTo(-14 + lx, -80); c.lineTo(-15 + lx, -99); c.lineTo(-7.5 + lx, -90); c.lineTo(lx, -103);
+    c.lineTo(7.5 + lx, -90); c.lineTo(15 + lx, -99); c.lineTo(14 + lx, -80); c.closePath(); c.fill();
+    c.strokeStyle = '#c9971a'; c.lineWidth = 1.5; c.stroke();
+    c.fillStyle = '#e23b4e'; circ(c, lx, -86, 2.8); c.fillStyle = '#3b82f6'; circ(c, -8 + lx, -85, 2.1); circ(c, 8 + lx, -85, 2.1);
+    return;
+  }
+  if (id === 'bunny') {
+    c.strokeStyle = '#b7c4d6'; c.lineWidth = 1.5;
+    for (const sx of [-6.5, 6.5]) {
+      c.save(); c.translate(sx + lx, -97); c.rotate(sx * 0.035);
+      c.fillStyle = '#f6f9fd'; c.beginPath(); c.ellipse(0, -11, 5.2, 13, 0, 0, TAU); c.fill(); c.stroke();
+      c.fillStyle = '#ffc2d1'; ell(c, 0, -11, 2.4, 9.5); c.restore();
+    }
+  }
+  const col = { blue: '#2f6fd8', green: '#2fa35a', bunny: '#f6f9fd' }[id] || '#e23b4e';
+  c.fillStyle = col; beaniePath(c, lx); c.fill();
+  if (id === 'bunny') { c.strokeStyle = '#b7c4d6'; c.lineWidth = 1.5; c.stroke(); }
+  if (id === 'green') {
+    c.save(); beaniePath(c, lx); c.clip(); c.fillStyle = 'rgba(255,255,255,0.85)';
+    c.fillRect(-16 + lx, -97, 32, 3); c.fillRect(-16 + lx, -91, 32, 3); c.restore();
+  }
+  c.fillStyle = id === 'bunny' ? '#ffc2d1' : '#ffffff'; c.fillRect(-15.5 + lx, -86, 31, 7);
+  if (id !== 'bunny') { c.fillStyle = '#ffffff'; circ(c, lx, -103, 5.5); }
+}
+function drawShot(x, y, r, rot, id) {
+  id = id || skins.shot;
+  if (id === 'flake') { drawFlake(x, y, r, rot); return; }
+  if (id === 'gold') { drawFlake(x, y, r, rot, 1, '#c9971a', '#fff1b8', 'rgba(255,214,90,0.45)'); return; }
+  const c = ctx;
+  c.save(); c.translate(x, y);
+  if (id === 'star') {
+    c.rotate(rot * 0.5); c.fillStyle = 'rgba(255,230,120,0.35)'; circ(c, 0, 0, r * 1.3);
+    c.beginPath();
+    for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.5 : r * 1.15; c.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); }
+    c.closePath(); c.fillStyle = '#ffe36b'; c.fill(); c.strokeStyle = '#c9971a'; c.lineWidth = Math.max(1.5, r * 0.14); c.lineJoin = 'round'; c.stroke();
+  } else if (id === 'heart') {
+    c.fillStyle = 'rgba(255,140,170,0.35)'; circ(c, 0, 0, r * 1.3);
+    c.fillStyle = '#ff5c7c'; heart(c, 0, r * 0.2, r * 2.2);
+    c.fillStyle = 'rgba(255,255,255,0.7)'; ell(c, -r * 0.35, -r * 0.25, r * 0.18, r * 0.12, -0.6);
+  } else if (id === 'crystal') {
+    c.rotate(rot * 0.3); c.fillStyle = 'rgba(160,215,255,0.35)'; circ(c, 0, 0, r * 1.3);
+    const g = c.createLinearGradient(-r, -r, r, r); g.addColorStop(0, '#f2fbff'); g.addColorStop(1, '#6fb8f5');
+    c.beginPath(); c.moveTo(0, -r * 1.25); c.lineTo(r * 0.75, 0); c.lineTo(0, r * 1.25); c.lineTo(-r * 0.75, 0); c.closePath();
+    c.fillStyle = g; c.fill(); c.strokeStyle = '#3f86d6'; c.lineWidth = Math.max(1.5, r * 0.12); c.stroke();
+    c.strokeStyle = 'rgba(255,255,255,0.9)'; c.beginPath(); c.moveTo(-r * 0.75, 0); c.lineTo(r * 0.75, 0); c.moveTo(0, -r * 1.25); c.lineTo(0, r * 1.25); c.stroke();
+  }
+  c.restore();
+}
+// рисуем превью в магазине теми же функциями, что и в игре
+function withCtx(c, fn) { const old = ctx; ctx = c; try { fn(); } finally { ctx = old; } }
+function previewCanvas(kind, id) {
+  const cv = document.createElement('canvas'), dpr = Math.min(window.devicePixelRatio || 1, 2);
+  cv.width = 64 * dpr; cv.height = 64 * dpr;
+  const c = cv.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  withCtx(c, () => {
+    if (kind === 'hat') {
+      c.translate(32, 46); c.scale(1.05, 1.05); c.translate(0, 77);
+      c.fillStyle = '#ffcfae'; ell(c, -13.5, -76, 3.2, 4.5); ell(c, 13.5, -76, 3.2, 4.5);
+      c.fillStyle = '#7a4a2e'; circ(c, 0, -77, 14);
+      drawHat(c, id, 0);
+    } else drawShot(32, 32, 17, 0.3, id);
+  });
+  return cv;
+}
+const shopEl = $('shop');
+function renderShop() {
+  updateCarrots();
+  for (const kind of ['hat', 'shot']) {
+    const box = $(kind === 'hat' ? 'shopHats' : 'shopShots'); box.innerHTML = '';
+    for (const it of SKINS[kind]) {
+      const owned = skins.owned.includes(it.id), on = skins[kind] === it.id;
+      const b = document.createElement('button');
+      b.className = 'item' + (on ? ' on' : '') + (!owned && carrots < it.price ? ' locked' : '');
+      b.appendChild(previewCanvas(kind, it.id));
+      const lab = document.createElement('span'); lab.className = 'price';
+      if (on) lab.textContent = '✓ ' + T('selected');
+      else if (owned) lab.textContent = T('select');
+      else lab.innerHTML = document.querySelector('.carrot').outerHTML + it.price;
+      b.appendChild(lab);
+      b.addEventListener('click', () => {
+        if (!owned) {
+          if (carrots < it.price) { b.animate([{ transform: 'translateX(0)' }, { transform: 'translateX(-5px)' }, { transform: 'translateX(5px)' }, { transform: 'translateX(0)' }], 250); return; }
+          carrots -= it.price; skins.owned.push(it.id); Sound.ensure(); Sound.power();
+        }
+        skins[kind] = it.id; saveSkins(); renderShop(); updateCarrots(true);
+      });
+      box.appendChild(b);
+    }
+  }
+}
+document.querySelectorAll('[data-open-shop]').forEach(b => b.addEventListener('click', () => {
+  store.set('str_tut_shop', '1'); $('brShopHint').classList.add('hidden'); $('btnBrShop').parentElement.classList.remove('hinting');
+  renderShop(); show(shopEl);
+}));
+function cheapestUnowned() {
+  let m = Infinity;
+  for (const kind of ['hat', 'shot']) for (const it of SKINS[kind]) if (!skins.owned.includes(it.id)) m = Math.min(m, it.price);
+  return m;
+}
+$('btnShopBack').addEventListener('click', () => hide(shopEl));
+$('btnDouble').addEventListener('click', () => {
+  const b = $('btnDouble'); if (game.doubled || game.state !== 'over') return;
+  b.disabled = true; game.state = 'ad';
+  Poki.rewardedBreak().then(ok => {
+    game.state = 'over'; b.disabled = false;
+    if (ok) { game.doubled = true; game.bonusCarrots = game.carrotsRun; addCarrots(game.bonusCarrots); updateCarrots(true); $('ovCarrots').textContent = game.carrotsRun + game.bonusCarrots; Sound.power(); }
+    b.classList.add('hidden');
+  });
+});
+updateCarrots(true);
+
+/* ================= Управление ================= */
+function setPointer(e) { pointer.x = e.clientX; pointer.y = e.clientY; }
+cvs.addEventListener('pointerdown', e => {
+  e.preventDefault(); Sound.ensure(); setPointer(e);
+  if (game.state !== 'play' || game.ending) return;
+  pointer.down = true; aimUpdate(); if (game.cool <= 0) fire();
+});
+window.addEventListener('pointermove', setPointer);
+window.addEventListener('pointerup', () => { pointer.down = false; });
+window.addEventListener('pointercancel', () => { pointer.down = false; });
+cvs.addEventListener('contextmenu', e => e.preventDefault());
+window.addEventListener('keydown', e => {
+  markInput();
+  if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
+  if (e.code === 'KeyP' || e.code === 'Escape') { if (game.state === 'play') pauseGame(); else if (game.state === 'pause') resumeGame(); }
+  if (e.code === 'KeyM') toggleMute();
+  if (e.code === 'KeyN') toggleMusic();
+  if (e.code === 'Space' || e.code === 'Enter') {
+    Sound.ensure();
+    if (game.state === 'menu' && shopEl.classList.contains('hidden') && langEl.classList.contains('hidden')) $('btnPlay').click();
+    else if (game.state === 'break') $('btnNext').click();
+    else if (game.state === 'play' && !game.ending && game.cool <= 0) { aimUpdate(); fire(); }
+  }
+});
+document.addEventListener('visibilitychange', () => { if (document.hidden) pauseGame(); Sound.suspend(document.hidden); });
+// музыка включается с первого касания (браузеры запрещают звук до действия игрока)
+function markInput() { if (hadInput) return; hadInput = true; if (game.state === 'play' && !game.ending) Poki.start(); }
+document.addEventListener('pointerdown', () => { Sound.ensure(); markInput(); }, true);
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', () => setTimeout(resize, 200));
+if (window.visualViewport) window.visualViewport.addEventListener('resize', resize);
+if (window.ResizeObserver) new ResizeObserver(() => resize()).observe(document.documentElement);
+
+$('btnPlay').addEventListener('click', () => { Sound.ensure(); hide(menuEl); game.state = 'ad'; Poki.commercialBreak().then(startGame); });
+$('btnResume').addEventListener('click', resumeGame);
+$('btnPause').addEventListener('click', pauseGame);
+$('btnMute').addEventListener('click', toggleMute);
+$('btnMusic').addEventListener('click', toggleMusic);
+$('btnNext').addEventListener('click', () => {
+  if (game.state !== 'break') return;
+  Sound.ensure(); hide(betweenEl); game.state = 'ad';
+  // обычная реклама — только после чётных волн (2, 4, 6...)
+  if (game.wave % 2 === 0) Poki.commercialBreak().then(proceedWave); else proceedWave();
+});
+$('btnLife').addEventListener('click', () => {
+  if (game.state !== 'break') return;
+  const b = $('btnLife'); b.disabled = true; hide(betweenEl); game.state = 'ad';
+  Poki.rewardedBreak().then(ok => {
+    if (ok) {
+      game.lives = Math.min(game.lives + 1, 5); updateHud(); Sound.power();
+      proceedWave(); // после рекламы за награду обычную не показываем
+      popup(playerX, playerY - 135 * S, '+♥', '#ff4d6d', 34 * S);
+    } else { game.state = 'break'; b.classList.add('hidden'); show(betweenEl); }
+  });
+});
+$('btnRestart').addEventListener('click', () => {
+  Sound.ensure(); hide(overEl); game.state = 'ad';
+  Poki.commercialBreak().then(startGame);
+});
+$('btnContinue').addEventListener('click', () => {
+  const btn = $('btnContinue'); btn.disabled = true; game.state = 'ad';
+  Poki.rewardedBreak().then(ok => {
+    btn.disabled = false;
+    if (ok) {
+      game.continues++; game.lives = 1; game.ending = false; hide(overEl);
+      for (const w of wolves) if (w.state === 'chase') wolfDefeated(w);
+      game.banner = { text: T('retry'), sub: T('wolvesFled'), t: 0, life: 1.8 };
+      game.state = 'play'; updateHud(); Poki.start(); Sound.duck(1);
+    } else { game.state = 'over'; btn.classList.add('hidden'); }
+  });
+});
+
+/* ---- Выбор языка ---- */
+const langEl = $('langPick');
+function openLang() {
+  $('langGrid').innerHTML = LANGS.map(([c, n]) => `<button data-lang="${c}" class="${c === lang ? 'on' : ''}" lang="${c}">${n}</button>`).join('');
+  show(langEl);
+}
+document.querySelectorAll('[data-open-lang]').forEach(b => b.addEventListener('click', openLang));
+langEl.addEventListener('click', e => {
+  const b = e.target.closest('button[data-lang]');
+  if (b) { store.set('str_lang', b.dataset.lang); applyLang(b.dataset.lang); updateHud(); hide(langEl); }
+  else if (e.target === langEl) hide(langEl);
+});
+// язык: выбор игрока → язык браузера → английский (язык от Poki уточняется после init)
+applyLang(pickLang(store.get('str_lang', '')) || (navigator.languages || [navigator.language]).map(pickLang).find(Boolean) || 'en');
+
+/* ================= Старт ================= */
+if (firstTime) hide(menuEl); else syncModal(); // первый запуск — сразу в игру, без меню
+resize();
+updateMuteIcon();
+$('menuBest').textContent = game.best;
+let last = performance.now(), loopErr = false;
+function loop(now) {
+  requestAnimationFrame(loop); // следующий кадр заказываем сразу — одна ошибка не остановит игру
+  let dt = (now - last) / 1000; last = now;
+  if (dt > 0.05) dt = 0.05; if (dt < 0) dt = 0;
+  if (!bg) { resize(); if (!bg) return; }
+  try {
+    updateSnow(dt);
+    if (game.state === 'play') update(dt); else game.time += dt;
+    render();
+  } catch (e) { if (!loopErr) { loopErr = true; console.error(e); } }
+}
+requestAnimationFrame(loop);
+Poki.init().then(() => {
+  if (!store.get('str_lang', '')) {
+    try { const c = pickLang(window.PokiSDK && PokiSDK.getLanguage && PokiSDK.getLanguage()); if (c) { applyLang(c); updateHud(); } } catch (e) {}
+  }
+  Poki.loadingFinished();
+  if (firstTime && game.state === 'menu') startGame();
+});
+}
+</script>
+</body>
+</html>
